@@ -1,0 +1,37 @@
+/* src/components/CourseCard.css */
+.course-card {
+  display: flex;
+  width: 300px;
+  background: #f3f9ff;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.course-card img {
+  width: 80px;
+  height: 80px;
+  margin-right: 10px;
+}
+
+.course-info h3 {
+  font-size: 14px;
+  color: #003087;
+  font-weight: bold;
+  margin: 0 0 6px;
+}
+
+.tags span {
+  background-color: #205df4;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 4px;
+}
+
+.course-info p {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #444;
+}

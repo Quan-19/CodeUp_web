@@ -1,0 +1,26 @@
+/* src/components/Sidebar.css */
+.sidebar {
+  width: 100px;
+  background-color: #2718ad;
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 25px 0;
+  font-size: 16px;
+  cursor: pointer;
+  color: #000;
+}
+.menu-item:hover {
+  color: #2718ad;
+  transition: color 0.3s ease;
+}
+
+
+
