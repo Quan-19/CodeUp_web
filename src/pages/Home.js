@@ -1,16 +1,19 @@
 // src/pages/Home.js
-import React from "react";
+import React, { useEffect, useState } from "react";
 import CourseCard from "../components/CourseCard";
 import Slider from "react-slick";
 import "./Home.css";
 
+
 const Home = () => {
-  const courseList = Array(6).fill({
-    title: "Làm đẹp giao diện với HTML và CSS(FIXED)",
-    tags: ["CSS", "HTML"],
-    description: "Làm đẹp giao diện với HTML và CSS là quá trình kết hợp...",
-    image: "/css.png",
-  });
+  const [courseList, setCourseList] = useState([]);
+
+  useEffect(() => {
+    fetch("http://localhost:8081/v1/courses")
+      .then(res => res.json())
+      .then(data => setCourseList(data))
+      .catch(err => console.error("Lỗi khi tải khóa học:", err));
+  }, []);
 
   const sliderSettings = {
     dots: true,
