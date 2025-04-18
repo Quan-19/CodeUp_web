@@ -1,21 +1,18 @@
 // src/components/CourseCard.js
 import React from "react";
+import { Link } from "react-router-dom";
 import "./CourseCard.css";
 
-const CourseCard = ({ image, title, tags, description }) => {
+const CourseCard = ({ course }) => {
   return (
-    <div className="course-card">
-      <img src={image} alt="course" />
-      <div className="course-info">
-        <h3>{title}</h3>
-        <div className="tags">
-          {tags.map((tag, idx) => (
-            <span key={idx}>{tag}</span>
-          ))}
-        </div>
-        <p>{description}</p>
+    <Link to={`/courses/${course._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+      <div className="course-card">
+        <h3>{course.title}</h3>
+        <p>{course.description}</p>
+        <p>Giá: {course.price} VND</p>
+        <span className="view-more">Xem thêm</span>
       </div>
-    </div>
+    </Link>
   );
 };
 
