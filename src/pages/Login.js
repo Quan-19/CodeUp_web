@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import "./Login.css";
 
 const Login = ({ setUser }) => {
   const [email, setEmail] = useState("");
@@ -21,7 +22,7 @@ const Login = ({ setUser }) => {
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem("token", data.token);
-        setUser(data.user); // user sẽ có { username, email }
+        setUser(data.user);
         navigate("/");
       } else {
         setError(data.error || "Đăng nhập thất bại.");
@@ -32,29 +33,34 @@ const Login = ({ setUser }) => {
   };
 
   return (
-    <form onSubmit={handleLogin} style={{ maxWidth: 300, margin: "auto" }}>
+    <div className="login-container">
       <h2>Đăng nhập</h2>
+      
+      {error && <div className="error-message">{error}</div>}
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      <form onSubmit={handleLogin}>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          required
+        />
 
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-        required
-      />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Mật khẩu"
+          required
+        />
 
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Mật khẩu"
-        required
-      />
-
-      <button type="submit">Đăng nhập</button>
-    </form>
+        <button type="submit">Đăng nhập</button>
+      </form>
+      <div className="register-link">
+        Bạn đã chưa có tài khoản? <a href="/Register">Đăng kí</a>
+      </div>
+    </div>
   );
 };
 

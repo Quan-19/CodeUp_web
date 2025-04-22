@@ -1,5 +1,6 @@
 /* src/components/CourseCard.css */
 .course-card {
+  height: auto;
   display: flex;
   flex-direction: column;
   width: 300px;
