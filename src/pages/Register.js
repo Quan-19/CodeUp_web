@@ -69,6 +69,15 @@ const Register = () => {
   return (
     <div className="register-wrapper">
       <div className="register-container">
+      <button 
+        className="back-to-home-btn"
+        onClick={() => navigate("/")}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 20L0 12L10 4V9H24V15H10V20Z" fill="currentColor"/>
+        </svg>
+        <span>Trang chủ</span>
+      </button>
         <div className="register-header">
           <h2>Tạo tài khoản mới</h2>
           <p>Bắt đầu hành trình học tập của bạn</p>

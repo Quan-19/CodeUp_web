@@ -263,3 +263,26 @@ button[type="submit"]:disabled {
   text-align: center;
   animation: fadeIn 0.5s ease-out;
 }
+.back-to-home-btn:hover {
+  background-color: rgba(67, 97, 238, 0.1);
+  transform: translateX(-3px);
+}
+
+.back-to-home-btn svg {
+  transition: transform 0.3s ease;
+}
+
+.back-to-home-btn:hover svg {
+  transform: translateX(-3px);
+}
+
+/* Điều chỉnh header để căn giữa tiêu đề */
+.login-header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-header h2 {
+  margin-top: 10px;
+}
