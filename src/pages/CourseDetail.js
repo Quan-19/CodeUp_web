@@ -1,7 +1,6 @@
-// src/pages/CourseDetail.js
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Star, Clock, Users, Book, CheckCircle, Play } from "react-feather";
+import { Star, Clock, Users, Book, CheckCircle, Play, ArrowLeft } from "react-feather";
 import "./CourseDetail.css";
 
 const CourseDetail = () => {
@@ -17,7 +16,7 @@ const CourseDetail = () => {
         const data = await res.json();
         setCourse(data);
       } catch (err) {
-        console.error("Lỗi khi tải khóa học:", err);
+        console.error("Error loading course:", err);
       }
     };
 
@@ -28,13 +27,18 @@ const CourseDetail = () => {
     return (
       <div className="course-loading">
         <div className="spinner"></div>
-        <p>Đang tải thông tin khóa học...</p>
+        <p>Loading course information...</p>
       </div>
     );
   }
 
   return (
     <div className="course-detail-container">
+      {/* Back to Home Button */}
+      <button className="back-button" onClick={() => navigate('/')}>
+        <ArrowLeft size={16} /> Quay về trang chủ
+      </button>
+
       {/* Banner Section */}
       <div className="course-banner">
         <div className="banner-overlay"></div>
@@ -188,7 +192,7 @@ const CourseDetail = () => {
                       <span><Book size={16} /> {course.instructor?.courses || 5} khóa học</span>
                     </div>
                     <p className="bio">
-                      {course.instructor?.bio || "Chuyên gia với 10 năm kinh nghiệm trong lĩnh vực phát triển phần mềm. Đã từng làm việc tại các tập đoàn công nghệ hàng đầu Việt Nam và quốc tế."}
+                      {course.instructor?.bio || "Chuyên gia với 10 năm kinh nghiệm trong lĩnh vực phát triển phần mềm."}
                     </p>
                   </div>
                 </div>

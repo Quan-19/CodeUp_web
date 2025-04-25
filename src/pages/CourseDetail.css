@@ -503,3 +503,29 @@
       justify-content: center;
     }
   }
+  .back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background-color: #3a86ff; /* Màu chủ đạo */
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+  }
+  
+  .back-button:hover {
+    background-color: #2667cc;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .back-button svg {
+    stroke-width: 2.5px;
+  }
