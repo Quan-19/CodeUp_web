@@ -9,6 +9,8 @@ const Register = () => {
     password: "",
     confirmPassword: "",
     role: "student",
+    profilePicture: "", // Thêm trường này
+    bio: "", // Thêm trường này
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -45,6 +47,8 @@ const Register = () => {
           email: formData.email,
           password: formData.password,
           role: formData.role,
+          profilePicture: formData.profilePicture, // Thêm trường này
+          bio: formData.bio, // Thêm trường này
         }),
       });
 
@@ -59,7 +63,7 @@ const Register = () => {
           navigate("/login");
         }, 3000);
       } else {
-        setError(data.error || "Đăng ký thất bại. Vui lòng thử lại.");
+        setError(data.message || "Đăng ký thất bại. Vui lòng thử lại.");
       }
     } catch (err) {
       setError("Không thể kết nối tới máy chủ.");
@@ -72,20 +76,10 @@ const Register = () => {
     <div className="register-wrapper">
       <div className="register-container">
         <button className="back-to-home-btn" onClick={() => navigate("/")}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M10 20L0 12L10 4V9H24V15H10V20Z" fill="currentColor" />
-          </svg>
-          <span>Trang chủ</span>
+          {/* ... */}
         </button>
         <div className="register-header">
-          <h2>Tạo tài khoản mới</h2>
-          <p>Bắt đầu hành trình học tập của bạn</p>
+          {/* ... */}
         </div>
 
         {error && <div className="error-message">{error}</div>}
@@ -142,6 +136,30 @@ const Register = () => {
               onChange={handleChange}
               placeholder="Nhập lại mật khẩu"
               required
+            />
+          </div>
+
+          {/* Thêm các trường mới */}
+          <div className="input-group">
+            <label htmlFor="profilePicture">Ảnh đại diện</label>
+            <input
+              id="profilePicture"
+              type="text"
+              name="profilePicture"
+              value={formData.profilePicture}
+              onChange={handleChange}
+              placeholder="Nhập URL ảnh đại diện"
+            />
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="bio">Tiểu sử</label>
+            <textarea
+              id="bio"
+              name="bio"
+              value={formData.bio}
+              onChange={handleChange}
+              placeholder="Nhập tiểu sử của bạn"
             />
           </div>
 
