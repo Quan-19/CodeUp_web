@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
@@ -8,7 +9,8 @@ import Register from "./pages/Register";
 import CourseDetail from "./pages/CourseDetail";
 import AddCourse from "./pages/Addcourse";
 import AdminDashboard from './pages/AdminDashboard';
-import Profile from "./pages/Profile"; // Import trang hồ sơ
+import Profile from "./pages/Profile";
+import PaymentStatus from "./pages/PaymentStatus";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -21,7 +23,7 @@ function AppLayout({ user, onLogout, children }) {
       <div className="main-layout">
         <Sidebar />
         <div className="main-content">
-          {children} {/* Hiển thị nội dung của các trang con ở đây */}
+          {children}
         </div>
       </div>
     </>
@@ -35,14 +37,13 @@ function App() {
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
     if (token && storedUser) {
-      setUser(JSON.parse(storedUser)); // ✅ Khôi phục đầy đủ user object
+      setUser(JSON.parse(storedUser));
     }
   }, []);
-  
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("email");
+    localStorage.removeItem("user");
     setUser(null);
   };
 
@@ -51,18 +52,20 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login setUser={setUser} />} />
         <Route path="/register" element={<Register />} />
-        <Route 
-          path="/profile" 
-          element={
-            <AppLayout user={user} onLogout={handleLogout}>
-              <Profile user={user} />
-            </AppLayout>
-          } 
-        />
-        <Route path="*" element={<AppLayout user={user} onLogout={handleLogout}><Home /></AppLayout>} />
-        <Route path="/courses/:id" element={<CourseDetail />} />
+        <Route path="/profile" element={
+          <AppLayout user={user} onLogout={handleLogout}>
+            <Profile user={user} />
+          </AppLayout>
+        } />
+        <Route path="/courses/:id" element={<CourseDetail user={user} />} />
         <Route path="/addcourse" element={<AddCourse />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/payment-status" element={<PaymentStatus />} />
+        <Route path="*" element={
+          <AppLayout user={user} onLogout={handleLogout}>
+            <Home />
+          </AppLayout>
+        } />
       </Routes>
     </Router>
   );
