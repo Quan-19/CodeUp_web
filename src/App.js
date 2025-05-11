@@ -1,4 +1,4 @@
-// src/App.js
+// src/App.jsx
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
@@ -8,23 +8,22 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CourseDetail from "./pages/CourseDetail";
 import AddCourse from "./pages/Addcourse";
-import AdminDashboard from './pages/AdminDashboard';
-// import Roadmap from "./pages/Roadmap";
-// import Courses from "./pages/Courses";
-
+import AdminDashboard from './pages/AdminDashboard.js';
+import Profile from "./pages/Profile";
+import PaymentStatus from "./pages/PaymentStatus";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "./App.css";
 
-function AppLayout({ user, onLogout }) {
+function AppLayout({ user, onLogout, children }) {
   return (
     <>
       <Header user={user} onLogout={onLogout} />
       <div className="main-layout">
         <Sidebar />
         <div className="main-content">
-          <Home />
+          {children}
         </div>
       </div>
     </>
@@ -36,15 +35,15 @@ function App() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const email = localStorage.getItem("email");
-    if (token && email) {
-      setUser({ email });
+    const storedUser = localStorage.getItem("user");
+    if (token && storedUser) {
+      setUser(JSON.parse(storedUser));
     }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("email");
+    localStorage.removeItem("user");
     setUser(null);
   };
 
@@ -53,13 +52,20 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login setUser={setUser} />} />
         <Route path="/register" element={<Register />} />
-        <Route path="*" element={<AppLayout user={user} onLogout={handleLogout} />} />
-        <Route path="/courses/:id" element={<CourseDetail />} />
+        <Route path="/profile" element={
+          <AppLayout user={user} onLogout={handleLogout}>
+            <Profile user={user} />
+          </AppLayout>
+        } />
+        <Route path="/courses/:id" element={<CourseDetail user={user} />} />
         <Route path="/addcourse" element={<AddCourse />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        {/* <Route path="/roadmap" element={<Roadmap />} /> */}
-        {/* <Route path="/courses" element={<Courses />} /> */}
-
+        <Route path="/payment-status" element={<PaymentStatus />} />
+        <Route path="*" element={
+          <AppLayout user={user} onLogout={handleLogout}>
+            <Home />
+          </AppLayout>
+        } />
       </Routes>
     </Router>
   );

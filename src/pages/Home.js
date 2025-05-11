@@ -6,6 +6,8 @@ import "./Home.css";
 const Home = () => {
   const [courses, setCourses] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [loading, setLoading] = useState(true); // Thêm loading state
+  const [error, setError] = useState(null); // Thêm state để lưu thông báo lỗi
   
   // Danh sách ảnh slideshow với nhiều ảnh đẹp về giáo dục
   const slides = [
@@ -43,16 +45,25 @@ const Home = () => {
 
   useEffect(() => {
     fetch("http://localhost:5000/api/courses")
-      .then((res) => res.json())
-      .then((data) => setCourses(data))
-      .catch((err) => console.error("Lỗi khi lấy dữ liệu khóa học:", err));
+      .then((res) => {
+        if (!res.ok) throw new Error("Không thể tải khóa học");
+        return res.json();
+      })
+      .then((data) => {
+        setCourses(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Lỗi khi lấy dữ liệu khóa học:", err);
+        setError(err.message); // Gán lỗi vào state
+        setLoading(false);
+      });
   }, []);
 
-  // Tự động chuyển slide với hiệu ứng mượt mà
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
-    }, 6000); // Tăng thời gian chuyển slide lên 6 giây
+    }, 6000);
     return () => clearInterval(interval);
   }, [slides.length]);
 
@@ -70,7 +81,7 @@ const Home = () => {
 
   return (
     <div className="home">
-      {/* Slideshow section với nhiều ảnh đẹp */}
+      {/* Slideshow section */}
       <div className="slideshow-container">
         {slides.map((slide, index) => (
           <div
@@ -92,7 +103,7 @@ const Home = () => {
         <button className="slide-nav next" onClick={goToNextSlide}>
           &#10095;
         </button>
-        
+
         {/* Dot indicator */}
         <div className="dots-container">
           {slides.map((_, index) => (
@@ -105,12 +116,19 @@ const Home = () => {
         </div>
       </div>
 
+      {/* Danh sách khóa học */}
       <h2>Danh sách khóa học</h2>
-      <div className="course-list">
-        {courses.map((course) => (
-          <CourseCard key={course._id} course={course} />
-        ))}
-      </div>
+      {loading ? (
+        <p>Đang tải khóa học...</p>
+      ) : error ? (
+        <p style={{ color: "red" }}>Lỗi: {error}</p>
+      ) : (
+        <div className="course-list">
+          {courses.map((course) => (
+            <CourseCard key={course._id} course={course} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

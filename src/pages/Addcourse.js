@@ -1,27 +1,70 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import './AddCourse.css';
+import React, { useState } from "react";
+import axios from "axios";
+import "./AddCourse.css";
+import { useNavigate } from "react-router-dom";
 
 const AddCourse = () => {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: '',
-    level: '',
-    price: '',
-    duration: '',
-    imageUrl: '',
+    title: "",
+    description: "",
+    category: "",
+    level: "",
+    price: "",
+    duration: "",
+    instructor: "",
+    imageUrl: "",
+    details: {
+      duration: "",
+      syllabus: [],
+      content: "",
+      video: "",
+    },
   });
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [previewImage, setPreviewImage] = useState(null);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name.startsWith("details.")) {
+      const detailName = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        details: {
+          ...prev.details,
+          [detailName]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  const handleSyllabusChange = (e, index) => {
+    const newSyllabus = [...formData.details.syllabus];
+    newSyllabus[index] = e.target.value;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      details: {
+        ...prev.details,
+        syllabus: newSyllabus,
+      },
+    }));
+  };
+
+  const addSyllabusItem = () => {
+    setFormData((prev) => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        syllabus: [...prev.details.syllabus, ""],
+      },
     }));
   };
 
@@ -30,14 +73,18 @@ const AddCourse = () => {
     if (!file) return;
 
     const formDataImage = new FormData();
-    formDataImage.append('image', file);
+    formDataImage.append("image", file);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/upload', formDataImage, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const res = await axios.post(
+        "http://localhost:5000/api/upload",
+        formDataImage,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       setFormData((prev) => ({
         ...prev,
         imageUrl: res.data.imageUrl,
@@ -45,62 +92,115 @@ const AddCourse = () => {
       setPreviewImage(URL.createObjectURL(file));
     } catch (err) {
       console.error(err);
-      setError('Tải ảnh lên thất bại.');
+      setError("Tải ảnh lên thất bại.");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
-    const { title, description, category, level, price, duration, imageUrl } = formData;
+    const user = JSON.parse(localStorage.getItem("user")); // Lấy user từ localStorage
+    const userId = user?.id;
+    const token = localStorage.getItem("token");
 
-    if (!title || !description || !category || !level || !price || !duration || !imageUrl) {
-      setError('Vui lòng điền đầy đủ thông tin.');
+    const {
+      title,
+      description,
+      category,
+      level,
+      price,
+      duration,
+      imageUrl,
+      details,
+    } = formData;
+
+    if (!userId) {
+      setError("Không tìm thấy ID người tạo khóa học. Vui lòng đăng nhập lại.");
+      setLoading(false);
+      return;
+    }
+
+    if (!token) {
+      setError("Không tìm thấy token. Vui lòng đăng nhập lại.");
+      setLoading(false);
+      return;
+    }
+
+    if (
+      !title ||
+      !description ||
+      !category ||
+      !level ||
+      !price ||
+      !duration ||
+      !imageUrl ||
+      !details.video
+    ) {
+      setError("Vui lòng điền đầy đủ thông tin.");
       setLoading(false);
       return;
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const instructorId = localStorage.getItem('userId');
-
-      if (!instructorId) {
-        setError('Không tìm thấy ID người tạo khóa học. Vui lòng đăng nhập lại.');
-        setLoading(false);
-        return;
-      }
-
-      await axios.post(
-        'http://localhost:5000/api/courses',
-        { title, description, category, level, price, duration, imageUrl }, // Không gửi instructor
+      const res = await axios.post(
+        "http://localhost:5000/api/courses",
+        {
+          title,
+          description,
+          category,
+          level,
+          price,
+          duration,
+          imageUrl,
+          details,
+          instructor: userId, // Gửi instructor là userId
+        },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Gửi token trong header
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
-      setSuccess('Khóa học đã được thêm thành công!');
-      setFormData({
-        title: '',
-        description: '',
-        category: '',
-        level: '',
-        price: '',
-        duration: '',
-        imageUrl: '',
-      });
-      setPreviewImage(null);
+      if (res.status === 200) {
+        setSuccess("Khóa học đã được thêm thành công!");
+        setFormData({
+          title: "",
+          description: "",
+          category: "",
+          level: "",
+          price: "",
+          duration: "",
+          instructor: "",
+          imageUrl: "",
+          details: {
+            duration: "",
+            syllabus: [],
+            content: "",
+            video: "",
+          },
+        });
+        setPreviewImage(null);
+      }
     } catch (err) {
       console.error(err);
-      setError('Đã xảy ra lỗi khi thêm khóa học.');
+      if (err.response) {
+        setError(
+          `Lỗi từ server: ${
+            err.response.data.message || err.response.statusText
+          }`
+        );
+      } else {
+        setError("Đã xảy ra lỗi khi thêm khóa học.");
+      }
     } finally {
       setLoading(false);
     }
+    navigate("/dashboard");
   };
 
   return (
@@ -172,6 +272,17 @@ const AddCourse = () => {
           required
         />
 
+        <label htmlFor="video">Link Video</label>
+        <input
+          type="text"
+          id="video"
+          name="details.video"
+          placeholder="Nhập link video"
+          value={formData.details.video}
+          onChange={handleChange}
+          required
+        />
+
         <label htmlFor="image">Ảnh khóa học</label>
         <input
           type="file"
@@ -180,10 +291,26 @@ const AddCourse = () => {
           onChange={handleImageUpload}
           required
         />
-        {previewImage && <img src={previewImage} alt="Preview" className="preview-image" />}
+        {previewImage && (
+          <img src={previewImage} alt="Preview" className="preview-image" />
+        )}
+
+        <label>Chương trình học</label>
+        {formData.details.syllabus.map((item, index) => (
+          <input
+            key={index}
+            type="text"
+            placeholder={`Nội dung chương trình học ${index + 1}`}
+            value={item}
+            onChange={(e) => handleSyllabusChange(e, index)}
+          />
+        ))}
+        <button type="button" onClick={addSyllabusItem}>
+          Thêm mục chương trình học
+        </button>
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Đang thêm...' : 'Thêm Khóa Học'}
+          {loading ? "Đang thêm..." : "Thêm Khóa Học"}
         </button>
       </form>
 

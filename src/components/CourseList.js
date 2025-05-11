@@ -5,8 +5,8 @@ import './CourseList.css';
 function CourseList({ courses }) {
   return (
     <div className="course-list">
-      {courses.map((course, idx) => (
-        <CourseCard key={idx} title={course.title} tags={course.tags} />
+      {courses.map((course) => (
+        <CourseCard key={course._id} course={course} />
       ))}
     </div>
   );

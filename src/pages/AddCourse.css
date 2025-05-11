@@ -64,3 +64,59 @@
   color: green;
   text-align: center;
 }
+
+/* CSS cho phần chương trình học */
+.syllabus-item {
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  overflow: hidden; /* Ẩn nội dung khi thu gọn */
+}
+
+.syllabus-item-header {
+  background-color: #f0f0f0;
+  padding: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.syllabus-item-content {
+  padding: 10px;
+  /* Ẩn nội dung ban đầu bằng cách đặt chiều cao tối đa là 0 */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out; /* Tạo hiệu ứng trượt */
+}
+
+/* Khi chương trình học được mở rộng, tăng chiều cao tối đa */
+.syllabus-item-content.expanded {
+  max-height: 500px; /* Điều chỉnh giá trị này để phù hợp với nội dung của bạn */
+}
+
+.syllabus-item-content label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.syllabus-item-content input,
+.syllabus-item-content textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box; /* Đảm bảo padding không làm thay đổi kích thước phần tử */
+}
+
+.syllabus-item-content button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.syllabus-item-content button:hover {
+  background-color: #c82333;
+}

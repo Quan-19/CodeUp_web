@@ -8,7 +8,9 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "student"
+    role: "student",
+    profilePicture: "", // Thêm trường này
+    bio: "", // Thêm trường này
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -17,9 +19,9 @@ const Register = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -27,7 +29,7 @@ const Register = () => {
     e.preventDefault();
     setError("");
     setSuccess("");
-    
+
     // Validate password match
     if (formData.password !== formData.confirmPassword) {
       setError("Mật khẩu xác nhận không khớp");
@@ -44,20 +46,24 @@ const Register = () => {
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          role: formData.role
+          role: formData.role,
+          profilePicture: formData.profilePicture, // Thêm trường này
+          bio: formData.bio, // Thêm trường này
         }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        setSuccess("Đăng ký thành công! Bạn sẽ được chuyển đến trang đăng nhập...");
-        
+        setSuccess(
+          "Đăng ký thành công! Bạn sẽ được chuyển đến trang đăng nhập..."
+        );
+
         // Tự động chuyển hướng sau 3 giây
         setTimeout(() => {
           navigate("/login");
         }, 3000);
       } else {
-        setError(data.error || "Đăng ký thất bại. Vui lòng thử lại.");
+        setError(data.message || "Đăng ký thất bại. Vui lòng thử lại.");
       }
     } catch (err) {
       setError("Không thể kết nối tới máy chủ.");
@@ -69,18 +75,11 @@ const Register = () => {
   return (
     <div className="register-wrapper">
       <div className="register-container">
-      <button 
-        className="back-to-home-btn"
-        onClick={() => navigate("/")}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 20L0 12L10 4V9H24V15H10V20Z" fill="currentColor"/>
-        </svg>
-        <span>Trang chủ</span>
-      </button>
+        <button className="back-to-home-btn" onClick={() => navigate("/")}>
+          {/* ... */}
+        </button>
         <div className="register-header">
-          <h2>Tạo tài khoản mới</h2>
-          <p>Bắt đầu hành trình học tập của bạn</p>
+          {/* ... */}
         </div>
 
         {error && <div className="error-message">{error}</div>}
@@ -140,6 +139,30 @@ const Register = () => {
             />
           </div>
 
+          {/* Thêm các trường mới */}
+          <div className="input-group">
+            <label htmlFor="profilePicture">Ảnh đại diện</label>
+            <input
+              id="profilePicture"
+              type="text"
+              name="profilePicture"
+              value={formData.profilePicture}
+              onChange={handleChange}
+              placeholder="Nhập URL ảnh đại diện"
+            />
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="bio">Tiểu sử</label>
+            <textarea
+              id="bio"
+              name="bio"
+              value={formData.bio}
+              onChange={handleChange}
+              placeholder="Nhập tiểu sử của bạn"
+            />
+          </div>
+
           <div className="input-group">
             <label htmlFor="role">Bạn là</label>
             <select
@@ -155,11 +178,7 @@ const Register = () => {
           </div>
 
           <button type="submit" disabled={isLoading}>
-            {isLoading ? (
-              <span className="spinner"></span>
-            ) : (
-              "Đăng ký"
-            )}
+            {isLoading ? <span className="spinner"></span> : "Đăng ký"}
           </button>
         </form>
 
@@ -169,7 +188,10 @@ const Register = () => {
 
         <div className="social-register">
           <button className="google-btn">
-            <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" alt="Google" />
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png"
+              alt="Google"
+            />
             Đăng ký với Google
           </button>
         </div>

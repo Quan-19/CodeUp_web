@@ -1,4 +1,3 @@
-// src/components/Header.js
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Header.css";
@@ -13,9 +12,7 @@ const Header = ({ user, onLogout }) => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // Xử lý tìm kiếm ở đây
     const searchTerm = e.target.search.value;
-    console.log("Searching for:", searchTerm);
     navigate(`/search?q=${searchTerm}`);
   };
 
@@ -40,6 +37,9 @@ const Header = ({ user, onLogout }) => {
         {user ? (
           <>
             <span className="user-greeting">Xin chào, {user.email}</span>
+            <Link to="/profile">
+              <button className="profile-button">Hồ Sơ</button>
+            </Link>
             <button className="logout" onClick={handleLogout}>
               Đăng xuất
             </button>

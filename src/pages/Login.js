@@ -22,22 +22,27 @@ const Login = ({ setUser }) => {
       });
 
       const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem('userId', data.user._id);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        setUser(data.user);
 
-        // Điều hướng theo vai trò
-        if (data.user.role === "admin") {
-          navigate("/admin/dashboard");
-        } else if (data.user.role === "instructor") {
-          navigate("/instructor/dashboard");
+      if (res.ok) {
+        if (data.token && data.user) {
+          console.log("User từ server:", data.user);
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          setUser(data.user);
+
+          // Điều hướng theo vai trò
+          if (data.user.role === "admin") {
+            navigate("/admin/dashboard");
+          } else if (data.user.role === "instructor") {
+            navigate("/instructor/dashboard");
+          } else {
+            navigate("/student/dashboard");
+          }
         } else {
-          navigate("/student/dashboard");
+          setError("Không tìm thấy token hoặc thông tin người dùng trong phản hồi.");
         }
       } else {
-        setError(data.error || "Đăng nhập thất bại. Vui lòng thử lại.");
+        setError(data.message || "Đăng nhập thất bại. Vui lòng thử lại.");
       }
     } catch (err) {
       setError("Không thể kết nối tới máy chủ.");
@@ -49,16 +54,10 @@ const Login = ({ setUser }) => {
   return (
     <div className="login-wrapper">
       <div className="login-container">
-        <button 
-        className="back-to-home-btn"
-        onClick={() => navigate("/")}
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M10 20L0 12L10 4V9H24V15H10V20Z" fill="currentColor"/>
-        </svg>
-        <span>Trang chủ</span>
-      </button>
-        
+        <button className="back-to-home-btn" onClick={() => navigate("/")}>
+          Trang chủ
+        </button>
+
         <div className="login-header">
           <h2>Chào mừng trở lại</h2>
           <p>Đăng nhập để tiếp tục học tập</p>
@@ -91,29 +90,10 @@ const Login = ({ setUser }) => {
             />
           </div>
 
-          <div className="forgot-password">
-            <a href="/forgot-password">Quên mật khẩu?</a>
-          </div>
-
           <button type="submit" disabled={isLoading}>
-            {isLoading ? (
-              <span className="spinner"></span>
-            ) : (
-              "Đăng nhập"
-            )}
+            {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
-
-        <div className="divider">
-          <span>hoặc</span>
-        </div>
-
-        <div className="social-login">
-          <button className="google-btn">
-            <img src="https://cdn-icons-png.flaticon.com/512/2991/2991148.png" alt="Google" />
-            Đăng nhập với Google
-          </button>
-        </div>
 
         <div className="register-link">
           Bạn chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
