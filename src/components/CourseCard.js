@@ -5,48 +5,51 @@ const CourseCard = ({ course, refreshCourses }) => {
   const [loading, setLoading] = useState(false);
   const [paymentWindow, setPaymentWindow] = useState(null);
 
-  // Kiểm tra trạng thái thanh toán từ URL khi component load
+  // Lấy userId từ localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id;
+
+  // Kiểm tra xem người dùng đã mua khóa học chưa
+  const isEnrolled = course.enrolledUsers?.includes(userId);
+
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
-    const paymentStatus = queryParams.get('payment_status');
-    
-    if (paymentStatus === 'success') {
-      alert('Thanh toán thành công! Khóa học đã được kích hoạt.');
-      if (typeof refreshCourses === 'function') {
+    const paymentStatus = queryParams.get("payment_status");
+
+    if (paymentStatus === "success") {
+      alert("Thanh toán thành công! Khóa học đã được kích hoạt.");
+      if (typeof refreshCourses === "function") {
         refreshCourses(); // Gọi hàm làm mới danh sách khóa học
       }
       window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (paymentStatus === 'failed') {
-      alert('Thanh toán thất bại! Vui lòng thử lại.');
+    } else if (paymentStatus === "failed") {
+      alert("Thanh toán thất bại! Vui lòng thử lại.");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
-  // Hàm xử lý thanh toán
   const handlePayment = async (e) => {
     e.stopPropagation();
     setLoading(true);
 
     try {
-      const response = await fetch('/api/create-qr', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courseId: course._id }),
+      const response = await fetch("/api/create-qr", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId: course._id, userId }),
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
-        // Mở cửa sổ thanh toán mới
-        const newWindow = window.open(data.url, '_blank', 'width=600,height=800');
+        const newWindow = window.open(data.url, "_blank", "width=600,height=800");
         setPaymentWindow(newWindow);
 
-        // Kiểm tra trạng thái cửa sổ định kỳ
         const checkWindow = setInterval(() => {
           if (newWindow.closed) {
             clearInterval(checkWindow);
-            if (typeof refreshCourses === 'function') {
-              refreshCourses(); // Làm mới dữ liệu khi cửa sổ đóng
+            if (typeof refreshCourses === "function") {
+              refreshCourses();
             }
           }
         }, 500);
@@ -61,10 +64,9 @@ const CourseCard = ({ course, refreshCourses }) => {
     }
   };
 
-  // Xem chi tiết khóa học
   const handleViewMore = (e) => {
     e.stopPropagation();
-    if (!course.published) {
+    if (!isEnrolled) {
       alert("Vui lòng mua khóa học để xem nội dung chi tiết!");
     } else {
       window.location.href = `/courses/${course._id}`;
@@ -84,24 +86,19 @@ const CourseCard = ({ course, refreshCourses }) => {
           </span>
         </div>
         <div className="action-buttons">
-          <button 
-            className="preview-button" 
-            onClick={handleViewMore}
-          >
+          <button className="preview-button" onClick={handleViewMore}>
             👀 Xem trước
           </button>
           <button
-            className={`purchase-button ${course.published ? 'purchased' : ''}`}
+            className={`purchase-button ${isEnrolled ? "purchased" : ""}`}
             onClick={handlePayment}
-            disabled={loading || course.published}
+            disabled={loading || isEnrolled}
           >
-            {loading ? (
-              '🔄 Đang xử lý...'
-            ) : course.published ? (
-              '✅ Đã sở hữu'
-            ) : (
-              '💳 Mua ngay'
-            )}
+            {loading
+              ? "🔄 Đang xử lý..."
+              : isEnrolled
+              ? "✅ Đã sở hữu"
+              : "💳 Mua ngay"}
           </button>
         </div>
       </div>
