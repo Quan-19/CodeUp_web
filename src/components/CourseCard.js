@@ -5,28 +5,31 @@ const CourseCard = ({ course, refreshCourses }) => {
   const [loading, setLoading] = useState(false);
   const [paymentWindow, setPaymentWindow] = useState(null);
 
-  // Lấy userId từ localStorage
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user?.id;
 
-  // Kiểm tra xem người dùng đã mua khóa học chưa
   const isEnrolled = course.enrolledUsers?.includes(userId);
 
-  useEffect(() => {
-    const queryParams = new URLSearchParams(window.location.search);
-    const paymentStatus = queryParams.get("payment_status");
+ useEffect(() => {
+  const handleMessage = (event) => {
+    const { paymentStatus } = event.data;
 
     if (paymentStatus === "success") {
       alert("Thanh toán thành công! Khóa học đã được kích hoạt.");
-      if (typeof refreshCourses === "function") {
-        refreshCourses(); // Gọi hàm làm mới danh sách khóa học
-      }
-      window.history.replaceState({}, document.title, window.location.pathname);
+      refreshCourses?.();
+      window.location.reload(); // hoặc dùng navigate nếu có router
     } else if (paymentStatus === "failed") {
       alert("Thanh toán thất bại! Vui lòng thử lại.");
-      window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
+  };
+
+  window.addEventListener("message", handleMessage);
+
+  return () => {
+    window.removeEventListener("message", handleMessage);
+  };
+}, []);
+
 
   const handlePayment = async (e) => {
     e.stopPropagation();
@@ -81,14 +84,10 @@ const CourseCard = ({ course, refreshCourses }) => {
         <p className="description">{course.description}</p>
         <div className="meta-info">
           <span className="price">💰 {course.price.toLocaleString()} VND</span>
-          <span className={`level ${course.level.toLowerCase()}`}>
-            {course.level}
-          </span>
+          <span className={`level ${course.level.toLowerCase()}`}>{course.level}</span>
         </div>
         <div className="action-buttons">
-          <button className="preview-button" onClick={handleViewMore}>
-            👀 Xem trước
-          </button>
+          <button className="preview-button" onClick={handleViewMore}>👀 Xem trước</button>
           <button
             className={`purchase-button ${isEnrolled ? "purchased" : ""}`}
             onClick={handlePayment}
