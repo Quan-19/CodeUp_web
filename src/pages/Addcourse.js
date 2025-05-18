@@ -90,6 +90,7 @@ const AddCourse = () => {
         imageUrl: res.data.imageUrl,
       }));
       setPreviewImage(URL.createObjectURL(file));
+      setError("");
     } catch (err) {
       console.error(err);
       setError("Tải ảnh lên thất bại.");
@@ -102,7 +103,7 @@ const AddCourse = () => {
     setError("");
     setSuccess("");
 
-    const user = JSON.parse(localStorage.getItem("user")); // Lấy user từ localStorage
+    const user = JSON.parse(localStorage.getItem("user"));
     const userId = user?.id;
     const token = localStorage.getItem("token");
 
@@ -117,18 +118,17 @@ const AddCourse = () => {
       details,
     } = formData;
 
+    // Validate
     if (!userId) {
       setError("Không tìm thấy ID người tạo khóa học. Vui lòng đăng nhập lại.");
       setLoading(false);
       return;
     }
-
     if (!token) {
       setError("Không tìm thấy token. Vui lòng đăng nhập lại.");
       setLoading(false);
       return;
     }
-
     if (
       !title ||
       !description ||
@@ -140,6 +140,12 @@ const AddCourse = () => {
       !details.video
     ) {
       setError("Vui lòng điền đầy đủ thông tin.");
+      setLoading(false);
+      return;
+    }
+    // Validate syllabus không để trống
+    if (details.syllabus.length === 0 || details.syllabus.some(item => item.trim() === "")) {
+      setError("Vui lòng điền đầy đủ chương trình học.");
       setLoading(false);
       return;
     }
@@ -156,7 +162,7 @@ const AddCourse = () => {
           duration,
           imageUrl,
           details,
-          instructor: userId, // Gửi instructor là userId
+          instructor: userId,
         },
         {
           headers: {
@@ -166,7 +172,7 @@ const AddCourse = () => {
         }
       );
 
-      if (res.status === 200) {
+      if (res.status === 201) {
         setSuccess("Khóa học đã được thêm thành công!");
         setFormData({
           title: "",
@@ -185,6 +191,9 @@ const AddCourse = () => {
           },
         });
         setPreviewImage(null);
+        setTimeout(() => navigate("/dashboard"), 1500);
+      } else {
+        setError("Đã xảy ra lỗi khi thêm khóa học.");
       }
     } catch (err) {
       console.error(err);
@@ -200,7 +209,6 @@ const AddCourse = () => {
     } finally {
       setLoading(false);
     }
-    navigate("/dashboard");
   };
 
   return (
@@ -303,6 +311,7 @@ const AddCourse = () => {
             placeholder={`Nội dung chương trình học ${index + 1}`}
             value={item}
             onChange={(e) => handleSyllabusChange(e, index)}
+            required
           />
         ))}
         <button type="button" onClick={addSyllabusItem}>

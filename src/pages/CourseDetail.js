@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import "./CourseDetail.css"; // Import your CSS file for styling
 
 const CourseDetail = () => {
   const { id } = useParams();
@@ -57,45 +58,54 @@ const CourseDetail = () => {
   };
 
   return (
-    <div>
-      <button onClick={() => navigate("/")}>Trang chủ</button>
+  <div className="course-detail-container">
+    <button className="back-button" onClick={() => navigate("/")}>
+      ← Trở về trang chủ
+    </button>
 
-      <div>
-        <h1>{course.title}</h1>
-        <div>Đánh giá: {course.rating}</div>
-        <div>Số học viên: {course.students}</div>
-        <div>Thời lượng: {course.details?.duration || course.duration}</div>
+    <div className="course-header">
+      <h1 className="course-title">{course.title}</h1>
+      <div className="course-meta">
+        <div className="meta-item">
+          <span className="rating-stars">★★★★☆</span>
+          ({course.rating})
+        </div>
+        <div className="meta-item">
+          👥 {course.students} học viên
+        </div>
+        <div className="meta-item">
+          ⏳ {course.details?.duration || course.duration}
+        </div>
       </div>
+    </div>
 
-      <div>
-        <h2>Giới thiệu khóa học</h2>
-        <p>{course.details?.content}</p>
-      </div>
+    <div className="section">
+      <h2>Giới thiệu khóa học</h2>
+      <p>{course.details?.content}</p>
+    </div>
 
-      <div>
-        <h2>Đề cương khóa học</h2>
-        <ul>
-          {course.details?.syllabus?.map((item, idx) => (
-            <li key={idx}>{item}</li>
-          ))}
-        </ul>
-      </div>
+    <div className="section">
+      <h2>Đề cương khóa học</h2>
+      <ul className="syllabus-list">
+        {course.details?.syllabus?.map((item, idx) => (
+          <li key={idx}>{item}</li>
+        ))}
+      </ul>
+    </div>
 
-      <div>
-        <h2>Video hướng dẫn</h2>
+    <div className="section">
+      <h2>Video hướng dẫn</h2>
+      <div className="video-grid">
         {course.details?.video?.map((url, idx) => {
           const embedUrl = getYouTubeEmbedUrl(url);
           return embedUrl ? (
-            <iframe
-              key={idx}
-              width="560"
-              height="315"
-              src={embedUrl}
-              title={`Video hướng dẫn ${idx + 1}`}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
+            <div className="video-container" key={idx}>
+              <iframe
+                src={embedUrl}
+                title={`Video hướng dẫn ${idx + 1}`}
+                allowFullScreen
+              ></iframe>
+            </div>
           ) : (
             <a key={idx} href={url} target="_blank" rel="noreferrer">
               {url}
@@ -103,63 +113,102 @@ const CourseDetail = () => {
           );
         })}
       </div>
-
-      <div>
-        <button onClick={() => setActiveTab("overview")}>Tổng quan</button>
-        <button onClick={() => setActiveTab("content")}>Nội dung</button>
-        <button onClick={() => setActiveTab("instructor")}>Giảng viên</button>
-        <button onClick={() => setActiveTab("reviews")}>Đánh giá</button>
-      </div>
-
-      <div>
-        {activeTab === "overview" && (
-          <>
-            <div>{course.description}</div>
-            {course.learningOutcomes?.map((item, i) => (
-              <div key={i}>- {item}</div>
-            ))}
-          </>
-        )}
-
-        {activeTab === "content" && (
-          <>
-            {course.curriculum?.map((chapter, i) => (
-              <div key={i}>
-                <h3>{chapter.title}</h3>
-                {chapter.lessons?.map((lesson, j) => (
-                  <div key={j}>
-                    {lesson.title} ({lesson.duration})
-                  </div>
-                ))}
-              </div>
-            ))}
-          </>
-        )}
-
-        {activeTab === "instructor" && course.instructor && (
-          <>
-            <h2>{course.instructor.name}</h2>
-            <div>{course.instructor.title}</div>
-            <p>{course.instructor.bio}</p>
-          </>
-        )}
-
-        {activeTab === "reviews" && (
-          <>
-            {course.reviews?.length > 0 ? (
-              course.reviews.map((review, i) => (
-                <div key={i}>
-                  <b>{review.user}:</b> {review.comment}
-                </div>
-              ))
-            ) : (
-              <div>Chưa có đánh giá nào.</div>
-            )}
-          </>
-        )}
-      </div>
     </div>
-  );
-};
+
+    <div className="tabs">
+      <button 
+        className={`tab-button ${activeTab === "overview" ? "active" : ""}`}
+        onClick={() => setActiveTab("overview")}
+      >
+        Tổng quan
+      </button>
+      <button 
+        className={`tab-button ${activeTab === "content" ? "active" : ""}`}
+        onClick={() => setActiveTab("content")}
+      >
+        Nội dung
+      </button>
+      <button 
+        className={`tab-button ${activeTab === "instructor" ? "active" : ""}`}
+        onClick={() => setActiveTab("instructor")}
+      >
+        Giảng viên
+      </button>
+      <button 
+        className={`tab-button ${activeTab === "reviews" ? "active" : ""}`}
+        onClick={() => setActiveTab("reviews")}
+      >
+        Đánh giá
+      </button>
+    </div>
+
+    <div className="tab-content">
+      {activeTab === "overview" && (
+        <div className="section">
+          <div className="overview-description">{course.description}</div>
+          <div className="learning-outcomes">
+            <h3>Bạn sẽ học được:</h3>
+            {course.learningOutcomes?.map((item, i) => (
+              <div className="outcome-item" key={i}>✓ {item}</div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === "content" && (
+        <div className="section">
+          {course.curriculum?.map((chapter, i) => (
+            <div className="curriculum-chapter" key={i}>
+              <h3 className="chapter-title">Chương {i + 1}: {chapter.title}</h3>
+              {chapter.lessons?.map((lesson, j) => (
+                <div className="lesson-item" key={j}>
+                  {lesson.title} <span className="lesson-duration">({lesson.duration})</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === "instructor" && course.instructor && (
+        <div className="section instructor-section">
+          <img 
+            src={course.instructor.avatar || "/default-avatar.jpg"} 
+            alt={course.instructor.name} 
+            className="instructor-avatar"
+          />
+          <div>
+            <h2>{course.instructor.name}</h2>
+            <div className="instructor-title">{course.instructor.title}</div>
+            <p className="instructor-bio">{course.instructor.bio}</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "reviews" && (
+        <div className="section">
+          {course.reviews?.length > 0 ? (
+            course.reviews.map((review, i) => (
+              <div className="review-item" key={i}>
+                <div className="review-user">{review.user}</div>
+                <div className="review-rating">
+                  {Array.from({ length: 5 }, (_, index) => (
+                    <span key={index} className={`star ${index < review.rating ? 'filled' : ''}`}>
+                      ★
+                    </span>
+                  ))}
+                </div>
+                <div className="review-comment">{review.comment}</div>
+              </div>
+            ))
+          ) : (
+            <div className="no-reviews">Chưa có đánh giá nào.</div>
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+);
+}
 
 export default CourseDetail;
