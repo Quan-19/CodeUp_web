@@ -1,6 +1,13 @@
-// src/components/Sidebar.js
 import React, { useState, useEffect } from "react";
-import { FaHome, FaStream, FaBook, FaChevronLeft, FaChevronRight, FaPlusCircle } from "react-icons/fa";
+import {
+  FaHome,
+  FaStream,
+  FaBook,
+  FaChevronLeft,
+  FaChevronRight,
+  FaPlusCircle,
+  FaUserShield,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
 
@@ -12,7 +19,6 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Lấy thông tin người dùng từ localStorage
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -27,7 +33,6 @@ const Sidebar = () => {
   const handleItemClick = (item) => {
     setActiveItem(item);
 
-    // Chuyển hướng đến trang tương ứng
     switch (item) {
       case "home":
         navigate("/");
@@ -41,6 +46,9 @@ const Sidebar = () => {
       case "addcourse":
         navigate("/addcourse");
         break;
+      case "admin":
+        navigate("/admin/dashboard");
+        break;
       default:
         break;
     }
@@ -49,9 +57,6 @@ const Sidebar = () => {
   if (loading) {
     return <p>Đang tải...</p>;
   }
-
-  console.log("User:", user);
-  console.log("Role:", user ? user.role : null);
 
   return (
     <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
@@ -80,6 +85,7 @@ const Sidebar = () => {
           <FaHome className="icon" />
           {!collapsed && <span>Trang chủ</span>}
         </div>
+
         <div
           className={`menu-item ${activeItem === "roadmap" ? "active" : ""}`}
           onClick={() => handleItemClick("roadmap")}
@@ -87,6 +93,7 @@ const Sidebar = () => {
           <FaStream className="icon" />
           {!collapsed && <span>Lộ trình</span>}
         </div>
+
         <div
           className={`menu-item ${activeItem === "courses" ? "active" : ""}`}
           onClick={() => handleItemClick("courses")}
@@ -94,14 +101,25 @@ const Sidebar = () => {
           <FaBook className="icon" />
           {!collapsed && <span>Khóa học đã đăng kí</span>}
         </div>
-        {/* Ẩn mục "Thêm Khóa Học" nếu người dùng không phải là Instructor hoặc Admin */}
-        {user && (user.role === "instructor" || user.role === "admin") && (
+
+        {(user?.role === "instructor" || user?.role === "admin") && (
           <div
             className={`menu-item ${activeItem === "addcourse" ? "active" : ""}`}
             onClick={() => handleItemClick("addcourse")}
           >
             <FaPlusCircle className="icon" />
             {!collapsed && <span>Thêm Khóa Học</span>}
+          </div>
+        )}
+
+        {/* Nút Trang Admin - chỉ hiển thị với admin */}
+        {user?.role === "admin" && (
+          <div
+            className={`menu-item ${activeItem === "admin" ? "active" : ""}`}
+            onClick={() => handleItemClick("admin")}
+          >
+            <FaUserShield className="icon" />
+            {!collapsed && <span>Trang Admin</span>}
           </div>
         )}
       </div>

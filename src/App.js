@@ -11,6 +11,8 @@ import AddCourse from "./pages/Addcourse";
 import AdminDashboard from './pages/AdminDashboard';
 import Profile from "./pages/Profile";
 import PaymentStatus from "./pages/PaymentStatus";
+import UserDetail from './pages/UserDetail';
+import Footer from "./components/Footer";
 
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -26,6 +28,7 @@ function AppLayout({ user, onLogout, children }) {
           {children}
         </div>
       </div>
+      <Footer />
     </>
   );
 }
@@ -57,6 +60,7 @@ function App() {
             <Profile user={user} />
           </AppLayout>
         } />
+        <Route path="/admin/users/:id" element={<UserDetail />} />
         <Route path="/courses/:id" element={<CourseDetail user={user} />} />
         <Route path="/addcourse" element={<AddCourse />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -66,6 +70,7 @@ function App() {
             <Home />
           </AppLayout>
         } />
+      
       </Routes>
     </Router>
   );

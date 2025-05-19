@@ -1,0 +1,272 @@
+/* Font và màu sắc cơ bản */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+:root {
+  --primary-color: #4361ee;
+  --danger-color: #f72541;
+  --success-color: #4cc9f0;
+  --warning-color: #f8961e;
+  --dark-color: #212529;
+  --light-color: #f8f9fa;
+  --gray-color: #6c757d;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f5f7fa;
+  color: var(--dark-color);
+  line-height: 1.6;
+}
+
+/* Container chính */
+.user-detail-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Header */
+.user-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.user-header h1 {
+  font-size: 2rem;
+  color: var(--dark-color);
+  font-weight: 700;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Nút bấm */
+.back-button, .delete-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: var(--transition);
+}
+
+.back-button {
+  background-color: var(--gray-color);
+  color: white;
+}
+
+.back-button:hover {
+  background-color: #5a6268;
+  transform: translateY(-2px);
+}
+
+.delete-button {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.delete-button:hover:not(:disabled) {
+  background-color: #d51a23;
+  transform: translateY(-2px);
+}
+
+.delete-button.deleting {
+  background-color: #b5176e;
+  cursor: not-allowed;
+}
+
+/* Card thông tin */
+.user-profile-card {
+  background-color: white;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  padding: 2rem;
+}
+
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.avatar-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.profile-avatar, .default-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--primary-color);
+}
+
+.default-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e9ecef;
+  color: var(--gray-color);
+  font-size: 5rem;
+}
+
+.user-status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: white;
+}
+
+.status-badge.active {
+  background-color: var(--success-color);
+}
+
+.status-badge.inactive {
+  background-color: var(--gray-color);
+}
+
+.user-meta h2 {
+  font-size: 1.75rem;
+  margin-bottom: 0.5rem;
+  color: var(--dark-color);
+}
+
+.user-role {
+  color: var(--primary-color);
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+/* Chi tiết người dùng */
+.user-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.detail-row {
+  margin-bottom: 1rem;
+}
+
+.detail-label {
+  display: block;
+  font-weight: 500;
+  color: var(--gray-color);
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  font-size: 1rem;
+  color: var(--dark-color);
+  padding: 0.5rem 0;
+  display: inline-block;
+}
+
+.detail-value.active {
+  color: var(--success-color);
+  font-weight: 500;
+}
+
+.detail-value.inactive {
+  color: var(--danger-color);
+  font-weight: 500;
+}
+
+.bio-row {
+  grid-column: 1 / -1;
+}
+
+.detail-bio {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--primary-color);
+}
+
+/* Loading và error */
+.loading-container, .error-container, .not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  text-align: center;
+}
+
+.loading-spinner {
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid var(--primary-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-icon {
+  background-color: var(--danger-color);
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .user-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .profile-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .user-details {
+    grid-template-columns: 1fr;
+  }
+}
