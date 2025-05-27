@@ -13,7 +13,8 @@ import Profile from "./pages/Profile";
 import PaymentStatus from "./pages/PaymentStatus";
 import UserDetail from './pages/UserDetail';
 import Footer from "./components/Footer";
-
+import FavoritePage from "./pages/FavoritePage";
+import InstructorDashboard from "./pages/InstructorDashboard";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import "./App.css";
@@ -65,6 +66,15 @@ function App() {
         <Route path="/addcourse" element={<AddCourse />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/payment-status" element={<PaymentStatus />} />
+        <Route path="/favorites" element={
+          <AppLayout user={user} onLogout={handleLogout}>
+            <FavoritePage user={user} />
+          </AppLayout>
+        } />
+        <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
+
+
+        {/* Home route */}
         <Route path="*" element={
           <AppLayout user={user} onLogout={handleLogout}>
             <Home />

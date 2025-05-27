@@ -7,6 +7,7 @@ import {
   FaChevronRight,
   FaPlusCircle,
   FaUserShield,
+  FaStar,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "./Sidebar.css";
@@ -49,6 +50,12 @@ const Sidebar = () => {
       case "admin":
         navigate("/admin/dashboard");
         break;
+      case "favorites":
+        navigate("/favorites");
+        break;
+      case "instructor":
+        navigate("/instructor/dashboard");
+        break;
       default:
         break;
     }
@@ -87,14 +94,6 @@ const Sidebar = () => {
         </div>
 
         <div
-          className={`menu-item ${activeItem === "roadmap" ? "active" : ""}`}
-          onClick={() => handleItemClick("roadmap")}
-        >
-          <FaStream className="icon" />
-          {!collapsed && <span>Lộ trình</span>}
-        </div>
-
-        <div
           className={`menu-item ${activeItem === "courses" ? "active" : ""}`}
           onClick={() => handleItemClick("courses")}
         >
@@ -102,17 +101,36 @@ const Sidebar = () => {
           {!collapsed && <span>Khóa học đã đăng kí</span>}
         </div>
 
+        <div
+          className={`menu-item ${activeItem === "favorites" ? "active" : ""}`}
+          onClick={() => handleItemClick("favorites")}
+        >
+          <FaStar className="icon" />
+          {!collapsed && <span>Danh sách yêu thích</span>}
+        </div>
+
         {(user?.role === "instructor" || user?.role === "admin") && (
-          <div
-            className={`menu-item ${activeItem === "addcourse" ? "active" : ""}`}
-            onClick={() => handleItemClick("addcourse")}
-          >
-            <FaPlusCircle className="icon" />
-            {!collapsed && <span>Thêm Khóa Học</span>}
-          </div>
+          <>
+            <div
+              className={`menu-item ${activeItem === "addcourse" ? "active" : ""}`}
+              onClick={() => handleItemClick("addcourse")}
+            >
+              <FaPlusCircle className="icon" />
+              {!collapsed && <span>Thêm Khóa Học</span>}
+            </div>
+
+            {user?.role === "instructor" && (
+              <div
+                className={`menu-item ${activeItem === "instructor" ? "active" : ""}`}
+                onClick={() => handleItemClick("instructor")}
+              >
+                <FaStream className="icon" />
+                {!collapsed && <span>Giảng dạy</span>}
+              </div>
+            )}
+          </>
         )}
 
-        {/* Nút Trang Admin - chỉ hiển thị với admin */}
         {user?.role === "admin" && (
           <div
             className={`menu-item ${activeItem === "admin" ? "active" : ""}`}
