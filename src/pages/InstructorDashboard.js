@@ -1,17 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './InstructorDashboard.css';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Legend
+} from 'recharts';
 
 const InstructorDashboard = () => {
   const [courses, setCourses] = useState([]);
   const [students, setStudents] = useState([]);
-  const [stats, setStats] = useState(null);
+  const [revenueData, setRevenueData] = useState([]);
+  const [monthlyRevenueData, setMonthlyRevenueData] = useState([]);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('courses');
+  const [showMonthlyRevenue, setShowMonthlyRevenue] = useState(false);
   const navigate = useNavigate();
-  
+
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const userId = user?.id;
 
@@ -21,7 +33,7 @@ const InstructorDashboard = () => {
       return;
     }
     fetchData();
-  }, [activeTab, userId]);
+  }, [activeTab, userId, showMonthlyRevenue]);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -30,9 +42,14 @@ const InstructorDashboard = () => {
       if (activeTab === 'courses') {
         const coursesResponse = await axios.get(`http://localhost:5000/api/instructor/courses/${userId}`);
         setCourses(coursesResponse.data);
-      } else {
+      } else if (activeTab === 'students') {
         const studentsResponse = await axios.get(`http://localhost:5000/api/instructor/students/${userId}`);
         setStudents(studentsResponse.data);
+      } else if (activeTab === 'revenue') {
+        const revenueRes = await axios.get(`http://localhost:5000/api/instructor/revenue/${userId}`);
+        setRevenueData(revenueRes.data);
+        const monthlyRes = await axios.get(`http://localhost:5000/api/instructor/revenue/monthly/${userId}`);
+        setMonthlyRevenueData(monthlyRes.data);
       }
     } catch (err) {
       setError('Failed to fetch data. Please try again.');
@@ -101,23 +118,6 @@ const InstructorDashboard = () => {
             Trang chủ
           </button>
           <h1 className="dashboard-title">Instructor Dashboard</h1>
-          
-          {stats && (
-            <div className="stats-container">
-              <div className="stat-item">
-                <span className="stat-number">{stats.totalCourses}</span>
-                <span className="stat-label">Khóa học</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">{stats.totalStudents}</span>
-                <span className="stat-label">Học viên</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">{stats.earnings?.toLocaleString() || 0} VND</span>
-                <span className="stat-label">Thu nhập</span>
-              </div>
-            </div>
-          )}
         </header>
 
         <div className="tabs-container">
@@ -127,12 +127,18 @@ const InstructorDashboard = () => {
           >
             My Courses
           </button>
-          {/* <button
+          <button
             className={`tab-button ${activeTab === 'students' ? 'active' : ''}`}
             onClick={() => setActiveTab('students')}
           >
             My Students
-          </button> */}
+          </button>
+          <button
+            className={`tab-button ${activeTab === 'revenue' ? 'active' : ''}`}
+            onClick={() => setActiveTab('revenue')}
+          >
+            Revenue Chart
+          </button>
         </div>
 
         {error && (
@@ -141,14 +147,16 @@ const InstructorDashboard = () => {
           </div>
         )}
 
-        <div className="action-buttons">
-          <button 
-            className="btn btn-primary"
-            onClick={() => navigate('/instructor/courses/new')}
-          >
-            + Tạo khóa học mới
-          </button>
-        </div>
+        {activeTab === 'courses' && (
+          <div className="action-buttons">
+            <button 
+              className="btn btn-primary"
+              onClick={() => navigate('/instructor/courses/new')}
+            >
+              + Tạo khóa học mới
+            </button>
+          </div>
+        )}
 
         <div className="data-card">
           {isLoading ? (
@@ -168,47 +176,52 @@ const InstructorDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {courses.map(course => (
-                  <tr key={course._id}>
-                    <td style={{ fontWeight: 500 }}>{course.title}</td>
-                    <td>{course.enrolledUsers?.length || 0}</td>
-                    <td>{(course.price * (course.enrolledUsers?.length || 0)).toLocaleString()} VND</td>
-                    <td>
-                      <span 
-                        className={`badge ${course.published ? 'badge-success' : 'badge-warning'}`}
-                        onClick={() => togglePublishStatus(course._id, course.published)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        {course.published ? 'Đã xuất bản' : 'Bản nháp'}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button 
-                          className="btn btn-sm btn-outline"
-                          onClick={() => navigate(`/courses/${course._id}`)}
+                {courses.map(course => {
+                  const studentCount = Math.max((course.enrolledUsers?.length || 0) - 2, 0);
+                  const revenue = course.price * studentCount;
+
+                  return (
+                    <tr key={course._id}>
+                      <td style={{ fontWeight: 500 }}>{course.title}</td>
+                      <td>{studentCount}</td>
+                      <td>{revenue.toLocaleString()} VND</td>
+                      <td>
+                        <span 
+                          className={`badge ${course.published ? 'badge-success' : 'badge-warning'}`}
+                          onClick={() => togglePublishStatus(course._id, course.published)}
+                          style={{ cursor: 'pointer' }}
                         >
-                          Chi tiết
-                        </button>
-                        <button
-                          className="btn btn-sm btn-primary"
-                          onClick={() => navigate(`/instructor/courses/${course._id}/edit`)}
-                        >
-                          Sửa
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDeleteCourse(course._id)}
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          {course.published ? 'Đã xuất bản' : 'Bản nháp'}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button 
+                            className="btn btn-sm btn-outline"
+                            onClick={() => navigate(`/courses/${course._id}`)}
+                          >
+                            Chi tiết
+                          </button>
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => navigate(`/editcourse/${course._id}`)}
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => handleDeleteCourse(course._id)}
+                          >
+                            Xóa
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-          ) : (
+          ) : activeTab === 'students' ? (
             <table className="data-table">
               <thead>
                 <tr>
@@ -256,6 +269,71 @@ const InstructorDashboard = () => {
                 )}
               </tbody>
             </table>
+          ) : (
+            <>
+              <div className="revenue-toggle">
+                <button
+                  className={`btn ${!showMonthlyRevenue ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => setShowMonthlyRevenue(false)}
+                >
+                  Theo khóa học
+                </button>
+                <button
+                  className={`btn ${showMonthlyRevenue ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => setShowMonthlyRevenue(true)}
+                >
+                  Theo tháng
+                </button>
+              </div>
+
+              {showMonthlyRevenue ? (
+                <div style={{ width: '100%', height: 400 }}>
+                  {monthlyRevenueData.length > 0 ? (
+                    <>
+                      <h3 style={{ textAlign: 'center' }}>Doanh thu theo tháng của từng khóa học</h3>
+                      <ResponsiveContainer>
+                        <BarChart data={monthlyRevenueData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="month" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          {Object.keys(monthlyRevenueData[0] || {}).filter(k => k !== 'month').map((key, idx) => (
+                            <Bar key={key} dataKey={key} fill={["#8884d8", "#82ca9d", "#ffc658", "#ff7300", "#00c49f"][idx % 5]} />
+                          ))}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </>
+                  ) : (
+                    <p style={{ textAlign: 'center', marginTop: '2rem' }}>
+                      Chưa có dữ liệu doanh thu theo tháng để hiển thị.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div style={{ width: '100%', height: 350 }}>
+                  {revenueData.length > 0 ? (
+                    <>
+                      <h3 style={{ textAlign: 'center' }}>Biểu đồ doanh thu theo khóa học</h3>
+                      <ResponsiveContainer>
+                        <BarChart data={revenueData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="courseTitle" />
+                          <YAxis />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="totalRevenue" fill="#8884d8" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </>
+                  ) : (
+                    <p style={{ textAlign: 'center', marginTop: '2rem' }}>
+                      Chưa có dữ liệu doanh thu để hiển thị.
+                    </p>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

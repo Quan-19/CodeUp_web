@@ -30,37 +30,36 @@ const RatingForm = ({ courseId, onSubmitted }) => {
   }, [courseId]);
 
   const handleSubmit = async (star) => {
-  if (submitting) return;
+    if (submitting) return;
 
-  const token = localStorage.getItem("token");
-  if (!token) return alert("Bạn cần đăng nhập để đánh giá");
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Bạn cần đăng nhập để đánh giá");
 
-  setSubmitting(true);
-  try {
-    const res = await fetch("/api/ratings", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ courseId, rating: star }),
-    });
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/ratings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ courseId, rating: star }),
+      });
 
-    const result = await res.json();
-    if (!res.ok) {
-      alert(result.message || "Gửi đánh giá thất bại");
-    } else {
-      setRating(star);
-      alert(`Cảm ơn bạn đã đánh giá khóa học ${star} sao!`);
-      alert(`Bạn đã đánh giá: ${star} sao`); // Thêm dòng này để hiển thị số sao
-      onSubmitted?.();
+      const result = await res.json();
+      if (!res.ok) {
+        alert(result.message || "Gửi đánh giá thất bại");
+      } else {
+        setRating(star);
+        alert(`Cảm ơn bạn đã đánh giá khóa học ${star} sao!`);
+        onSubmitted?.();
+      }
+    } catch (err) {
+      alert("Lỗi kết nối đến máy chủ");
+    } finally {
+      setSubmitting(false);
     }
-  } catch (err) {
-    alert("Lỗi kết nối đến máy chủ");
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
 
   return (
     <div className="rating-form">
