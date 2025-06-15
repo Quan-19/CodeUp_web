@@ -182,7 +182,7 @@ const InstructorDashboard = () => {
       return sortOrder === 'asc' ? valA - valB : valB - valA;
     });
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 8;
 
   const renderOverviewTab = () => {
     if (!stats) return null;
@@ -194,10 +194,10 @@ const InstructorDashboard = () => {
             <h3>Tổng số khóa học</h3>
             <p className="stat-number">{stats.totalCourses}</p>
           </div>
-          <div className="stat-card">
+          {/* <div className="stat-card">
             <h3>Tổng số học viên</h3>
             <p className="stat-number">{stats.totalStudents}</p>
-          </div>
+          </div> */}
           <div className="stat-card">
             <h3>Tổng doanh thu</h3>
             <p className="stat-number">{stats.totalRevenue.toLocaleString()} VND</p>
@@ -679,7 +679,7 @@ const InstructorDashboard = () => {
                       <option value="">Sắp xếp theo</option>
                       <option value="totalRevenue">Doanh thu</option>
                       <option value="totalStudents">Số học viên</option>
-                      <option value="lastPayment">Ngày thanh toán gần nhất</option>
+                      {/* <option value="lastPayment">Ngày thanh toán gần nhất</option> */}
                     </select>
                   </div>
                   
