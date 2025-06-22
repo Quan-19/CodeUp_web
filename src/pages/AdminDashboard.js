@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js';
 import './AdminDashboard.css';
-import { FiHome, FiUsers, FiBook, FiDollarSign, FiPieChart, FiSettings, FiLogOut, FiArrowUp, FiArrowDown } from 'react-icons/fi';
+import { FiHome, FiUsers, FiBook, FiDollarSign, FiPieChart, FiSettings, FiLogOut, FiArrowUp, FiArrowDown, FiSearch } from 'react-icons/fi';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend);
 
@@ -14,6 +14,7 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalCourses: 0,
+    totalInstructors: 0,
     recentEnrollments: 0,
     recentCourses: 0,
     revenueChange: 0,
@@ -21,24 +22,46 @@ const AdminDashboard = () => {
   });
   const [revenueData, setRevenueData] = useState({ labels: [], datasets: [] });
   const [topInstructors, setTopInstructors] = useState({ labels: [], datasets: [] });
+  const [instructorRevenue, setInstructorRevenue] = useState({ labels: [], datasets: [] });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // Filter states
+  const [roleFilter, setRoleFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [courseStatusFilter, setCourseStatusFilter] = useState('');
+  const [instructorFilter, setInstructorFilter] = useState('');
+  const [courseSearchTerm, setCourseSearchTerm] = useState('');
+
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, [activeTab, roleFilter, statusFilter, userSearchTerm, categoryFilter, courseStatusFilter, instructorFilter, courseSearchTerm]);
 
   const fetchData = async () => {
     setIsLoading(true);
     setError('');
     try {
       if (activeTab === 'users') {
-        const usersResponse = await axios.get('http://localhost:5000/api/admin/users');
+        const params = {
+          role: roleFilter,
+          active: statusFilter,
+          search: userSearchTerm
+        };
+        const usersResponse = await axios.get('http://localhost:5000/api/admin/users', { params });
         setUsers(usersResponse.data);
       } else if (activeTab === 'courses') {
-        const coursesResponse = await axios.get('http://localhost:5000/api/admin/courses');
+        const params = {
+          category: categoryFilter,
+          published: courseStatusFilter,
+          instructor: instructorFilter,
+          search: courseSearchTerm
+        };
+        const coursesResponse = await axios.get('http://localhost:5000/api/admin/courses', { params });
         setCourses(coursesResponse.data);
       } else {
         const [
@@ -46,26 +69,30 @@ const AdminDashboard = () => {
           enrollmentsResponse,
           coursesResponse,
           revenueResponse,
-          instructorsResponse
+          instructorsResponse,
+          instructorRevenueResponse
         ] = await Promise.all([
           axios.get('http://localhost:5000/api/admin/stats'),
           axios.get('http://localhost:5000/api/admin/enrollment-stats'),
           axios.get('http://localhost:5000/api/admin/course-stats'),
           axios.get('http://localhost:5000/api/admin/revenue-stats'),
-          axios.get('http://localhost:5000/api/admin/top-instructors')
+          axios.get('http://localhost:5000/api/admin/top-instructors'),
+          axios.get('http://localhost:5000/api/admin/instructor-revenue')
         ]);
 
         setStats({
           totalUsers: statsResponse.data.userCount,
           totalCourses: statsResponse.data.courseCount,
+          totalInstructors: statsResponse.data.instructorCount,
           recentEnrollments: enrollmentsResponse.data.count,
           recentCourses: coursesResponse.data.count,
           revenueChange: 12.5, // Example data - should come from API
           userChange: 8.2 // Example data - should come from API
         });
 
+        // Process revenue data
         const revenueStats = revenueResponse.data;
-        const months = revenueStats.map(item => `Tháng ${item._id}`);
+        const months = revenueStats.map(item => `Tháng ${item._id.month}/${item._id.year}`);
         const amounts = revenueStats.map(item => item.totalRevenue);
         setRevenueData({
           labels: months,
@@ -80,6 +107,7 @@ const AdminDashboard = () => {
           }]
         });
 
+        // Process top instructors data
         const instructorsData = instructorsResponse.data;
         setTopInstructors({
           labels: instructorsData.map(item => item.instructorName),
@@ -91,12 +119,43 @@ const AdminDashboard = () => {
             borderWidth: 2
           }]
         });
+
+        // Process instructor revenue data
+        const instructorRevData = instructorRevenueResponse.data;
+        setInstructorRevenue({
+          labels: instructorRevData.map(item => item.instructorName),
+          datasets: [{
+            label: 'Doanh thu (VND)',
+            data: instructorRevData.map(item => item.totalRevenue),
+            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+            borderColor: 'rgba(153, 102, 255, 1)',
+            borderWidth: 2
+          }]
+        });
       }
     } catch (err) {
       setError('Không thể tải dữ liệu. Vui lòng thử lại.');
       console.error('Fetch error:', err);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      await axios.put(`http://localhost:5000/api/admin/users/${userId}/role`, { role: newRole });
+      fetchData(); // Refresh data
+    } catch (err) {
+      setError('Cập nhật vai trò thất bại');
+    }
+  };
+
+  const handleStatusChange = async (userId, newStatus) => {
+    try {
+      await axios.put(`http://localhost:5000/api/admin/users/${userId}`, { active: newStatus });
+      fetchData(); // Refresh data
+    } catch (err) {
+      setError('Cập nhật trạng thái thất bại');
     }
   };
 
@@ -189,9 +248,8 @@ const AdminDashboard = () => {
             </a>
           </div>
           <button className="back-to-home-btn" onClick={() => navigate("/")}>
-          Trang chủ
-        </button>
-
+            Trang chủ
+          </button>
         </nav>
       </aside>
 
@@ -241,8 +299,8 @@ const AdminDashboard = () => {
                 </div>
                 <h3 className="stat-card-value">{stats.totalUsers}</h3>
                 <div className={`stat-card-change ${stats.userChange >= 0 ? 'positive' : 'negative'}`}>
-                  {stats.userChange >= 0 ? <FiArrowUp /> : <FiArrowDown />}
-                  {Math.abs(stats.userChange)}% so với tháng trước
+                  {/* {stats.userChange >= 0 ? <FiArrowUp /> : <FiArrowDown />} */}
+                  {/* {Math.abs(stats.userChange)}% so với tháng trước */}
                 </div>
               </div>
               
@@ -254,16 +312,30 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <h3 className="stat-card-value">{stats.totalCourses}</h3>
-                <div className="stat-card-change positive">
+                {/* <div className="stat-card-change positive">
                   <FiArrowUp />
                   {stats.recentCourses} mới trong tháng
+                </div> */}
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-card-header">
+                  <span className="stat-card-title">Tổng giảng viên</span>
+                  <div className="stat-card-icon warning">
+                    <FiUsers size={20} />
+                  </div>
                 </div>
+                <h3 className="stat-card-value">{stats.totalInstructors}</h3>
+                {/* <div className="stat-card-change positive">
+                  <FiArrowUp />
+                  5.2% so với tháng trước
+                </div> */}
               </div>
               
               <div className="stat-card">
                 <div className="stat-card-header">
                   <span className="stat-card-title">Doanh thu</span>
-                  <div className="stat-card-icon warning">
+                  <div className="stat-card-icon danger">
                     <FiDollarSign size={20} />
                   </div>
                 </div>
@@ -271,24 +343,10 @@ const AdminDashboard = () => {
                   {revenueData.datasets[0]?.data.reduce((a, b) => a + b, 0).toLocaleString()} VND
                 </h3>
                 <div className={`stat-card-change ${stats.revenueChange >= 0 ? 'positive' : 'negative'}`}>
-                  {stats.revenueChange >= 0 ? <FiArrowUp /> : <FiArrowDown />}
-                  {Math.abs(stats.revenueChange)}% so với tháng trước
+                  {/* {stats.revenueChange >= 0 ? <FiArrowUp /> : <FiArrowDown />} */}
+                  {/* {Math.abs(stats.revenueChange)}% so với tháng trước */}
                 </div>
               </div>
-              
-              {/* <div className="stat-card">
-                <div className="stat-card-header">
-                  <span className="stat-card-title">Đăng ký mới</span>
-                  <div className="stat-card-icon danger">
-                    <FiUsers size={20} />
-                  </div>
-                </div>
-                <h3 className="stat-card-value">{stats.recentEnrollments}</h3>
-                <div className="stat-card-change positive">
-                  <FiArrowUp />
-                  5.2% so với tháng trước
-                </div>
-              </div> */}
             </div>
 
             {/* Charts */}
@@ -306,12 +364,60 @@ const AdminDashboard = () => {
                   <Bar data={topInstructors} options={chartOptions} />
                 </div>
               </div>
+              
+              <div className="chart-card">
+                <h3 className="chart-title">Doanh thu theo giảng viên</h3>
+                <div className="chart-container">
+                  <Bar data={instructorRevenue} options={chartOptions} />
+                </div>
+              </div>
             </div>
           </>
         ) : activeTab === 'users' ? (
           <div className="table-card">
             <div className="table-header">
               <h3 className="table-title">Danh sách người dùng</h3>
+            </div>
+            
+            {/* User Filter Section */}
+            <div className="filter-section">
+              <div className="row">
+                <div className="col-md-3">
+                  <select 
+                    className="form-control"
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                  >
+                    <option value="">Tất cả vai trò</option>
+                    <option value="User">Người dùng</option>
+                    <option value="instructor">Giảng viên</option>
+                    <option value="admin">Quản trị viên</option>
+                  </select>
+                </div>
+                <div className="col-md-3">
+                  <select 
+                    className="form-control"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="true">Hoạt động</option>
+                    <option value="false">Đã khóa</option>
+                  </select>
+                </div>
+                <div className="col-md-6">
+                  <div className="search-input-container">
+                    <FiSearch className="search-icon" />
+                    <input
+                      type="text"
+                      className="form-control with-icon"
+                      placeholder="Tìm kiếm theo tên hoặc email..."
+                      value={userSearchTerm}
+                      onChange={(e) => setUserSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
             
             <table className="data-table">
@@ -341,14 +447,25 @@ const AdminDashboard = () => {
                     </td>
                     <td>{user.email}</td>
                     <td>
-                      <span className={`badge ${user.role === 'admin' ? 'badge-primary' : 'badge-success'}`}>
-                        {user.role}
-                      </span>
+                      <select 
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                        className="role-select"
+                      >
+                        <option value="user">Người dùng</option>
+                        <option value="instructor">Giảng viên</option>
+                        <option value="admin">Quản trị viên</option>
+                      </select>
                     </td>
                     <td>
-                      <span className={`badge ${user.active ? 'badge-success' : 'badge-danger'}`}>
-                        {user.active ? 'Hoạt động' : 'Không hoạt động'}
-                      </span>
+                      <select 
+                        value={user.active}
+                        onChange={(e) => handleStatusChange(user._id, e.target.value === 'true')}
+                        className="status-select"
+                      >
+                        <option value="true">Hoạt động</option>
+                        <option value="false">Đã khóa</option>
+                      </select>
                     </td>
                     <td>
                       <div className="d-flex gap-2">
@@ -375,9 +492,53 @@ const AdminDashboard = () => {
           <div className="table-card">
             <div className="table-header">
               <h3 className="table-title">Danh sách khóa học</h3>
-              <button className="btn btn-primary">
+              <button 
+                className="btn btn-primary"
+                onClick={() => navigate('/admin/courses/new')}
+              >
                 Thêm khóa học
               </button>
+            </div>
+            
+            {/* Course Filter Section */}
+            <div className="filter-section">
+              <div className="row">
+                <div className="col-md-3">
+                  <select 
+                    className="form-control"
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                  >
+                    <option value="">Tất cả danh mục</option>
+                    <option value="web">Lập trình Web</option>
+                    <option value="mobile">Lập trình Mobile</option>
+                    <option value="data">Khoa học dữ liệu</option>
+                  </select>
+                </div>
+                <div className="col-md-3">
+                  <select 
+                    className="form-control"
+                    value={courseStatusFilter}
+                    onChange={(e) => setCourseStatusFilter(e.target.value)}
+                  >
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="true">Đã xuất bản</option>
+                    <option value="false">Bản nháp</option>
+                  </select>
+                </div>
+                <div className="col-md-6">
+                  <div className="search-input-container">
+                    <FiSearch className="search-icon" />
+                    <input
+                      type="text"
+                      className="form-control with-icon"
+                      placeholder="Tìm kiếm theo tên khóa học..."
+                      value={courseSearchTerm}
+                      onChange={(e) => setCourseSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
             
             <table className="data-table">
@@ -397,16 +558,16 @@ const AdminDashboard = () => {
                     <td>
                       <div className="d-flex align-items-center">
                         <img 
-                          src={`https://ui-avatars.com/api/?name=${course.instructorName}&background=random`} 
-                          alt={course.instructorName} 
+                          src={`https://ui-avatars.com/api/?name=${course.instructor?.username || 'Instructor'}&background=random`} 
+                          alt={course.instructor?.username} 
                           className="rounded-circle me-2" 
                           width="32" 
                           height="32"
                         />
-                        {course.instructorName || course.instructor}
+                        {course.instructor?.username || 'N/A'}
                       </div>
                     </td>
-                    <td>{course.enrolledCount || 0}</td>
+                    <td>{course.enrolledUsers?.length || 0}</td>
                     <td>
                       <span className={`badge ${course.published ? 'badge-success' : 'badge-warning'}`}>
                         {course.published ? 'Đã xuất bản' : 'Bản nháp'}
