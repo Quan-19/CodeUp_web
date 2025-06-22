@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Bar, Line } from 'react-chartjs-2';
@@ -36,13 +36,18 @@ const AdminDashboard = () => {
   const [instructorFilter, setInstructorFilter] = useState('');
   const [courseSearchTerm, setCourseSearchTerm] = useState('');
 
+  const [searchTimeout, setSearchTimeout] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchData();
-  }, [activeTab, roleFilter, statusFilter, userSearchTerm, categoryFilter, courseStatusFilter, instructorFilter, courseSearchTerm]);
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError('');
     try {
@@ -86,8 +91,8 @@ const AdminDashboard = () => {
           totalInstructors: statsResponse.data.instructorCount,
           recentEnrollments: enrollmentsResponse.data.count,
           recentCourses: coursesResponse.data.count,
-          revenueChange: 12.5, // Example data - should come from API
-          userChange: 8.2 // Example data - should come from API
+          revenueChange: 12.5,
+          userChange: 8.2
         });
 
         // Process revenue data
@@ -139,12 +144,28 @@ const AdminDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [activeTab, roleFilter, statusFilter, userSearchTerm, categoryFilter, courseStatusFilter, instructorFilter, courseSearchTerm]);
+
+  useEffect(() => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    const timeout = setTimeout(() => {
+      fetchData();
+    }, 500);
+    setSearchTimeout(timeout);
+
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [fetchData]);
 
   const handleRoleChange = async (userId, newRole) => {
     try {
       await axios.put(`http://localhost:5000/api/admin/users/${userId}/role`, { role: newRole });
-      fetchData(); // Refresh data
+      fetchData();
     } catch (err) {
       setError('Cập nhật vai trò thất bại');
     }
@@ -152,8 +173,8 @@ const AdminDashboard = () => {
 
   const handleStatusChange = async (userId, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/users/${userId}`, { active: newStatus });
-      fetchData(); // Refresh data
+      await axios.put(`http://localhost:5000/api/admin/users/${userId}/status`, { active: newStatus });
+      fetchData();
     } catch (err) {
       setError('Cập nhật trạng thái thất bại');
     }
@@ -176,6 +197,28 @@ const AdminDashboard = () => {
       setError(`Xóa ${type === 'users' ? 'người dùng' : 'khóa học'} thất bại. Vui lòng thử lại.`);
       alert(`Xóa ${type === 'users' ? 'người dùng' : 'khóa học'} thất bại. Vui lòng thử lại.`);
       console.error('Delete error:', err);
+    }
+  };
+
+  const handleSearch = () => {
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+      setSearchTimeout(null);
+    }
+    fetchData();
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleSearchChange = (e, type) => {
+    if (type === 'user') {
+      setUserSearchTerm(e.target.value);
+    } else {
+      setCourseSearchTerm(e.target.value);
     }
   };
 
@@ -216,7 +259,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
-      {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
           <h2 className="sidebar-title">Admin Panel</h2>
@@ -253,7 +295,6 @@ const AdminDashboard = () => {
         </nav>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
         <header className="dashboard-header">
           <h1 className="dashboard-title">
@@ -288,7 +329,6 @@ const AdminDashboard = () => {
           </div>
         ) : activeTab === 'dashboard' ? (
           <>
-            {/* Stats Cards */}
             <div className="stats-grid mb-5">
               <div className="stat-card">
                 <div className="stat-card-header">
@@ -299,8 +339,8 @@ const AdminDashboard = () => {
                 </div>
                 <h3 className="stat-card-value">{stats.totalUsers}</h3>
                 <div className={`stat-card-change ${stats.userChange >= 0 ? 'positive' : 'negative'}`}>
-                  {/* {stats.userChange >= 0 ? <FiArrowUp /> : <FiArrowDown />} */}
-                  {/* {Math.abs(stats.userChange)}% so với tháng trước */}
+                  {stats.userChange >= 0 ? <FiArrowUp /> : <FiArrowDown />}
+                  {Math.abs(stats.userChange)}% so với tháng trước
                 </div>
               </div>
               
@@ -312,10 +352,10 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <h3 className="stat-card-value">{stats.totalCourses}</h3>
-                {/* <div className="stat-card-change positive">
+                <div className="stat-card-change positive">
                   <FiArrowUp />
                   {stats.recentCourses} mới trong tháng
-                </div> */}
+                </div>
               </div>
               
               <div className="stat-card">
@@ -326,10 +366,10 @@ const AdminDashboard = () => {
                   </div>
                 </div>
                 <h3 className="stat-card-value">{stats.totalInstructors}</h3>
-                {/* <div className="stat-card-change positive">
+                <div className="stat-card-change positive">
                   <FiArrowUp />
                   5.2% so với tháng trước
-                </div> */}
+                </div>
               </div>
               
               <div className="stat-card">
@@ -343,13 +383,12 @@ const AdminDashboard = () => {
                   {revenueData.datasets[0]?.data.reduce((a, b) => a + b, 0).toLocaleString()} VND
                 </h3>
                 <div className={`stat-card-change ${stats.revenueChange >= 0 ? 'positive' : 'negative'}`}>
-                  {/* {stats.revenueChange >= 0 ? <FiArrowUp /> : <FiArrowDown />} */}
-                  {/* {Math.abs(stats.revenueChange)}% so với tháng trước */}
+                  {stats.revenueChange >= 0 ? <FiArrowUp /> : <FiArrowDown />}
+                  {Math.abs(stats.revenueChange)}% so với tháng trước
                 </div>
               </div>
             </div>
 
-            {/* Charts */}
             <div className="charts-grid mb-4">
               <div className="chart-card">
                 <h3 className="chart-title">Doanh thu theo tháng</h3>
@@ -379,7 +418,6 @@ const AdminDashboard = () => {
               <h3 className="table-title">Danh sách người dùng</h3>
             </div>
             
-            {/* User Filter Section */}
             <div className="filter-section">
               <div className="row">
                 <div className="col-md-3">
@@ -394,26 +432,21 @@ const AdminDashboard = () => {
                     <option value="admin">Quản trị viên</option>
                   </select>
                 </div>
-                <div className="col-md-3">
-                  <select 
-                    className="form-control"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="true">Hoạt động</option>
-                    <option value="false">Đã khóa</option>
-                  </select>
-                </div>
+
                 <div className="col-md-6">
                   <div className="search-input-container">
-                    <FiSearch className="search-icon" />
+                    <FiSearch 
+                      className="search-icon" 
+                      onClick={handleSearch}
+                      style={{ cursor: 'pointer' }}
+                    />
                     <input
                       type="text"
                       className="form-control with-icon"
                       placeholder="Tìm kiếm theo tên hoặc email..."
                       value={userSearchTerm}
-                      onChange={(e) => setUserSearchTerm(e.target.value)}
+                      onChange={(e) => handleSearchChange(e, 'user')}
+                      onKeyDown={handleKeyDown}
                     />
                   </div>
                 </div>
@@ -426,7 +459,7 @@ const AdminDashboard = () => {
                   <th>Tên</th>
                   <th>Email</th>
                   <th>Vai trò</th>
-                  <th>Trạng thái</th>
+                  {/* <th>Trạng thái</th> */}
                   <th>Hành động</th>
                 </tr>
               </thead>
@@ -457,7 +490,7 @@ const AdminDashboard = () => {
                         <option value="admin">Quản trị viên</option>
                       </select>
                     </td>
-                    <td>
+                    {/* <td>
                       <select 
                         value={user.active}
                         onChange={(e) => handleStatusChange(user._id, e.target.value === 'true')}
@@ -466,7 +499,7 @@ const AdminDashboard = () => {
                         <option value="true">Hoạt động</option>
                         <option value="false">Đã khóa</option>
                       </select>
-                    </td>
+                    </td> */}
                     <td>
                       <div className="d-flex gap-2">
                         <button 
@@ -500,54 +533,34 @@ const AdminDashboard = () => {
               </button>
             </div>
             
-            {/* Course Filter Section */}
             <div className="filter-section">
               <div className="row">
-                <div className="col-md-3">
-                  <select 
-                    className="form-control"
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                  >
-                    <option value="">Tất cả danh mục</option>
-                    <option value="web">Lập trình Web</option>
-                    <option value="mobile">Lập trình Mobile</option>
-                    <option value="data">Khoa học dữ liệu</option>
-                  </select>
-                </div>
-                <div className="col-md-3">
-                  <select 
-                    className="form-control"
-                    value={courseStatusFilter}
-                    onChange={(e) => setCourseStatusFilter(e.target.value)}
-                  >
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="true">Đã xuất bản</option>
-                    <option value="false">Bản nháp</option>
-                  </select>
-                </div>
-                <div className="col-md-6">
+                <div className="col-md-12">
                   <div className="search-input-container">
-                    <FiSearch className="search-icon" />
+                    <FiSearch 
+                      className="search-icon" 
+                      onClick={handleSearch}
+                      style={{ cursor: 'pointer' }}
+                    />
                     <input
                       type="text"
                       className="form-control with-icon"
                       placeholder="Tìm kiếm theo tên khóa học..."
                       value={courseSearchTerm}
-                      onChange={(e) => setCourseSearchTerm(e.target.value)}
+                      onChange={(e) => handleSearchChange(e, 'course')}
+                      onKeyDown={handleKeyDown}
                     />
                   </div>
                 </div>
               </div>
             </div>
-            
             <table className="data-table">
               <thead>
                 <tr>
                   <th>Tên khóa học</th>
                   <th>Giảng viên</th>
                   <th>Học viên</th>
-                  <th>Trạng thái</th>
+                  {/* <th>Trạng thái</th> */}
                   <th>Hành động</th>
                 </tr>
               </thead>
@@ -568,11 +581,11 @@ const AdminDashboard = () => {
                       </div>
                     </td>
                     <td>{course.enrolledUsers?.length || 0}</td>
-                    <td>
+                    {/* <td>
                       <span className={`badge ${course.published ? 'badge-success' : 'badge-warning'}`}>
-                        {course.published ? 'Đã xuất bản' : 'Bản nháp'}
+                        {course.published ? 'Đã xuất bản' : 'Đã xuất bản'}
                       </span>
-                    </td>
+                    </td> */}
                     <td>
                       <div className="d-flex gap-2">
                         <button 

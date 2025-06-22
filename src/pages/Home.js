@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from "react";
 import CourseCard from "../components/CourseCard";
+import { useLocation } from "react-router-dom";
 import "./Home.css";
 
 const Home = () => {
   const [courses, setCourses] = useState([]);
+  const [filteredCourses, setFilteredCourses] = useState([]);
   const [favoriteCourseIds, setFavoriteCourseIds] = useState([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const token = localStorage.getItem("token");
+  const location = useLocation();
 
   const coursesPerPage = 8;
   const slides = [
@@ -51,12 +55,20 @@ const Home = () => {
   ];
 
   useEffect(() => {
+    // Lấy query từ URL nếu có
+    const searchParams = new URLSearchParams(location.search);
+    const query = searchParams.get("q") || "";
+    setSearchQuery(query);
+  }, [location]);
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const resCourses = await fetch("http://localhost:5000/api/courses");
         if (!resCourses.ok) throw new Error("Không thể tải khóa học");
         const courseData = await resCourses.json();
         setCourses(courseData);
+        setFilteredCourses(courseData); // Khởi tạo filteredCourses với toàn bộ danh sách
 
         if (token) {
           const resFav = await fetch("http://localhost:5000/api/favorites", {
@@ -79,6 +91,19 @@ const Home = () => {
   }, [token]);
 
   useEffect(() => {
+    // Lọc khóa học khi searchQuery thay đổi
+    if (searchQuery) {
+      const filtered = courses.filter((course) =>
+        course.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredCourses(filtered);
+      setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+    } else {
+      setFilteredCourses(courses);
+    }
+  }, [searchQuery, courses]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) =>
         prev === slides.length - 1 ? 0 : prev + 1
@@ -98,11 +123,11 @@ const Home = () => {
   // Pagination logic
   const indexOfLastCourse = currentPage * coursesPerPage;
   const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
-  const currentCourses = courses.slice(
+  const currentCourses = filteredCourses.slice(
     indexOfFirstCourse,
     indexOfLastCourse
   );
-  const totalPages = Math.ceil(courses.length / coursesPerPage);
+  const totalPages = Math.ceil(filteredCourses.length / coursesPerPage);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
@@ -158,7 +183,12 @@ const Home = () => {
         </div>
       </div>
 
-      <h2>Danh sách khóa học</h2>
+      <h2>
+        {searchQuery
+          ? `Kết quả tìm kiếm cho "${searchQuery}"`
+          : "Danh sách khóa học"}
+      </h2>
+      
       {loading ? (
         <p>Đang tải khóa học...</p>
       ) : error ? (
@@ -166,30 +196,36 @@ const Home = () => {
       ) : (
         <>
           <div key={currentPage} className="course-list fade-page">
-            {currentCourses.map((course) => (
-              <CourseCard
-                key={course._id}
-                course={course}
-                isInitiallyFavorite={favoriteCourseIds.includes(course._id)}
-                onFavoriteToggle={handleFavoriteToggle}
-              />
-            ))}
+            {currentCourses.length > 0 ? (
+              currentCourses.map((course) => (
+                <CourseCard
+                  key={course._id}
+                  course={course}
+                  isInitiallyFavorite={favoriteCourseIds.includes(course._id)}
+                  onFavoriteToggle={handleFavoriteToggle}
+                />
+              ))
+            ) : (
+              <p>Không tìm thấy khóa học phù hợp</p>
+            )}
           </div>
 
-          <div className="pagination">
-            <button onClick={handlePrevPage} disabled={currentPage === 1}>
-              &laquo; Trang trước
-            </button>
-            <span>
-              Trang {currentPage} / {totalPages}
-            </span>
-            <button
-              onClick={handleNextPage}
-              disabled={currentPage === totalPages}
-            >
-              Trang sau &raquo;
-            </button>
-          </div>
+          {filteredCourses.length > coursesPerPage && (
+            <div className="pagination">
+              <button onClick={handlePrevPage} disabled={currentPage === 1}>
+                &laquo; Trang trước
+              </button>
+              <span>
+                Trang {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+              >
+                Trang sau &raquo;
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>

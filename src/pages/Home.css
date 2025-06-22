@@ -241,3 +241,9 @@ h2 {
     transform: translateY(0);
   }
 }
+.course-card {
+  border: 1px solid #ccc;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+}
