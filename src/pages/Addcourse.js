@@ -832,7 +832,7 @@ const AddCourse = () => {
         </div>
 
         {/* Phần Câu Hỏi Trắc Nghiệm */}
-        <div className="form-section quiz-section">
+        {/* <div className="form-section quiz-section">
           <div className="section-header">
             <h3>Câu Hỏi Trắc Nghiệm</h3>
             <button
@@ -999,7 +999,7 @@ const AddCourse = () => {
               ))}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Các Nút Hành Động */}
         <div className="form-actions">

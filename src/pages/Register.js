@@ -75,8 +75,8 @@ const Register = () => {
   return (
     <div className="register-wrapper">
       <div className="register-container">
-        <button className="back-to-home-btn" onClick={() => navigate("/")}>
-          {/* ... */}
+        <button className="back-to-home-btn" onClick={() => navigate("/") }>
+          Trang chủ
         </button>
         <div className="register-header">
           {/* ... */}

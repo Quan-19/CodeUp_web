@@ -42,6 +42,7 @@ const InstructorDashboard = () => {
   const [courseStudents, setCourseStudents] = useState([]);
   const [isStudentsLoading, setIsStudentsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAllCoursesModal, setShowAllCoursesModal] = useState(false);
 
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user')) || {};
@@ -194,19 +195,19 @@ const InstructorDashboard = () => {
             <h3>Tổng số khóa học</h3>
             <p className="stat-number">{stats.totalCourses}</p>
           </div>
-          {/* <div className="stat-card">
-            <h3>Tổng số học viên</h3>
-            <p className="stat-number">{stats.totalStudents}</p>
-          </div> */}
           <div className="stat-card">
             <h3>Tổng doanh thu</h3>
             <p className="stat-number">{stats.totalRevenue.toLocaleString()} VND</p>
           </div>
+          {/* <div className="stat-card">
+            <h3>Học viên trung bình</h3>
+            <p className="stat-number">{Math.round(stats.totalStudents / Math.max(stats.totalCourses, 1))}</p>
+          </div> */}
         </div>
 
         <div className="chart-row">
           <div className="chart-container">
-            <h3>Doanh thu theo tháng (12 tháng gần nhất)</h3>
+            <h3>Doanh thu theo tháng</h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart 
                 data={monthlyTrend}
@@ -215,13 +216,21 @@ const InstructorDashboard = () => {
                     handleChartClick(data.activePayload[0].payload);
                   }
                 }}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip formatter={(value) => [`${value.toLocaleString()} VND`, 'Doanh thu']} />
+                <Tooltip 
+                  formatter={(value) => [`${value.toLocaleString()} VND`, 'Doanh thu']}
+                  contentStyle={{
+                    borderRadius: '8px',
+                    border: 'none',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                  }}
+                />
                 <Legend />
-                <Bar dataKey="revenue" fill="#8884d8" name="Doanh thu" />
+                <Bar dataKey="revenue" fill="#8884d8" name="Doanh thu" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -236,49 +245,85 @@ const InstructorDashboard = () => {
                     handleChartClick(data.activePayload[0].payload);
                   }
                 }}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="month" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{
+                    borderRadius: '8px',
+                    border: 'none',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                  }}
+                />
                 <Legend />
-                <Bar dataKey="enrollments" fill="#82ca9d" name="Lượt đăng ký" />
+                <Bar dataKey="enrollments" fill="#82ca9d" name="Lượt đăng ký" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="chart-row">
-          <div className="chart-container full-width">
-            <h3>Phân bổ doanh thu theo khóa học</h3>
-            <ResponsiveContainer width="100%" height={400}>
-              <PieChart
-                onClick={(data) => {
-                  if (data && data.activePayload && data.activePayload.length > 0) {
-                    handleChartClick(data.activePayload[0].payload);
-                  }
-                }}
-              >
-                <Pie
-                  data={revenueData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="totalRevenue"
-                  nameKey="courseTitle"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+        <div className="revenue-distribution-container">
+          <div className="revenue-distribution-header">
+            <h3 className="revenue-distribution-title">Phân bổ doanh thu theo khóa học</h3>
+            <div className="revenue-distribution-legend">
+              {revenueData.slice(0, 4).map((entry, index) => (
+                <div key={`legend-${index}`} className="legend-item">
+                  <div 
+                    className="legend-color" 
+                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                  />
+                  <span>{entry.courseTitle.length > 15 ? `${entry.courseTitle.substring(0, 15)}...` : entry.courseTitle}</span>
+                </div>
+              ))}
+              {revenueData.length > 4 && (
+                <div 
+                  className="legend-item" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => setShowAllCoursesModal(true)}
                 >
-                  {revenueData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => [`${value.toLocaleString()} VND`, 'Doanh thu']} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+                  <span>+{revenueData.length - 4} khóa học khác</span>
+                </div>
+              )}
+            </div>
           </div>
+          <ResponsiveContainer width="100%" height={400}>
+            <PieChart
+              onClick={(data) => {
+                if (data && data.activePayload && data.activePayload.length > 0) {
+                  handleChartClick(data.activePayload[0].payload);
+                }
+              }}
+            >
+              <Pie
+                data={revenueData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                outerRadius={120}
+                innerRadius={60}
+                fill="#8884d8"
+                dataKey="totalRevenue"
+                nameKey="courseTitle"
+                label={({ name, percent }) => 
+                  `${name.split(' ')[0]}: ${(percent * 100).toFixed(0)}%`
+                }
+              >
+                {revenueData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value) => [`${value.toLocaleString()} VND`, 'Doanh thu']}
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: 'none',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
     );
@@ -321,7 +366,7 @@ const InstructorDashboard = () => {
         {activeTab === 'courses' && (
           <>
             <div className="action-buttons">
-              <button className="btn btn-primary" onClick={() => navigate('/instructor/courses/new')}>+ Tạo khóa học mới</button>
+              <button className="btn btn-primary" onClick={() => navigate('/addcourse')}>+ Tạo khóa học mới</button>
             </div>
             <div className="search-filter-container">
               <input
@@ -628,7 +673,6 @@ const InstructorDashboard = () => {
                           />
                           <Legend />
                           <Bar dataKey="totalRevenue" fill="#8884d8" name="Doanh thu" />
-                          <Bar dataKey="totalEnrollments" fill="#82ca9d" name="Lượt đăng ký" />
                         </BarChart>
                       </ResponsiveContainer>
                       <div className="monthly-revenue-top-courses">
@@ -679,7 +723,6 @@ const InstructorDashboard = () => {
                       <option value="">Sắp xếp theo</option>
                       <option value="totalRevenue">Doanh thu</option>
                       <option value="totalStudents">Số học viên</option>
-                      {/* <option value="lastPayment">Ngày thanh toán gần nhất</option> */}
                     </select>
                   </div>
                   
@@ -795,96 +838,154 @@ const InstructorDashboard = () => {
         </div>
       </div>
 
-      {/* Modal hiển thị thông tin chi tiết */}
-<Modal
-  open={isModalOpen}
-  onClose={handleCloseModal}
-  aria-labelledby="modal-modal-title"
-  aria-describedby="modal-modal-description"
->
-  <Box className="modal-content" style={{ maxWidth: '800px', width: '90%' }}>
-    <Typography className="modal-title" variant="h6" component="h2">
-      Chi tiết khóa học: {selectedCourse?.courseTitle}
-    </Typography>
-    <Typography className="modal-body" sx={{ mt: 2 }}>
-      {selectedCourse && (
-        <>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-            {selectedCourse.courseThumbnail && (
-              <img 
-                src={selectedCourse.courseThumbnail} 
-                alt={selectedCourse.courseTitle}
-                style={{ width: '120px', height: '90px', borderRadius: '4px', objectFit: 'cover' }}
-              />
+      {/* Modal hiển thị thông tin chi tiết khóa học */}
+      <Modal
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box className="modal-content" style={{ maxWidth: '800px', width: '90%' }}>
+          <Typography className="modal-title" variant="h6" component="h2">
+            Chi tiết khóa học: {selectedCourse?.courseTitle}
+          </Typography>
+          <Typography className="modal-body" sx={{ mt: 2 }}>
+            {selectedCourse && (
+              <>
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                  {selectedCourse.courseThumbnail && (
+                    <img 
+                      src={selectedCourse.courseThumbnail} 
+                      alt={selectedCourse.courseTitle}
+                      style={{ width: '120px', height: '90px', borderRadius: '4px', objectFit: 'cover' }}
+                    />
+                  )}
+                  <div>
+                    <p><strong>Giá khóa học:</strong> {selectedCourse.price.toLocaleString()} VND</p>
+                    <p><strong>Tổng doanh thu:</strong> {selectedCourse.totalRevenue.toLocaleString()} VND</p>
+                    <p><strong>Số học viên:</strong> {selectedCourse.totalStudents}</p>
+                    <p><strong>Lần thanh toán gần nhất:</strong> {selectedCourse.lastPayment ? 
+                      new Date(selectedCourse.lastPayment).toLocaleDateString() : 'Chưa có'}</p>
+                  </div>
+                </div>
+                
+                <h3 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Danh sách học viên ({courseStudents.length})</h3>
+                {isStudentsLoading ? (
+                  <div style={{ textAlign: 'center', padding: '1rem' }}>
+                    <div className="loading-spinner" style={{ width: '1.5rem', height: '1.5rem' }} />
+                    <p>Đang tải danh sách học viên...</p>
+                  </div>
+                ) : courseStudents.length > 0 ? (
+                  <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.5rem' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                          <th style={{ textAlign: 'left', padding: '0.5rem' }}>Học viên</th>
+                          <th style={{ textAlign: 'left', padding: '0.5rem' }}>Email</th>
+                          <th style={{ textAlign: 'left', padding: '0.5rem' }}>Ngày mua</th>
+                          <th style={{ textAlign: 'left', padding: '0.5rem' }}>Giá</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {courseStudents.map(student => (
+                          <tr key={student._id} style={{ borderBottom: '1px solid var(--border)' }}>
+                            <td style={{ padding: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                {student.avatar && (
+                                  <img 
+                                    src={student.avatar} 
+                                    alt={student.username} 
+                                    style={{ width: '32px', height: '32px', borderRadius: '50%' }}
+                                  />
+                                )}
+                                <span>{student.username || student.email}</span>
+                              </div>
+                            </td>
+                            <td style={{ padding: '0.5rem' }}>{student.email}</td>
+                            <td style={{ padding: '0.5rem' }}>
+                              {student.purchasedAt ? new Date(student.purchasedAt).toLocaleDateString() : 'N/A'}
+                            </td>
+                            <td style={{ padding: '0.5rem' }}>{student.amount?.toLocaleString()} VND</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-light)' }}>
+                    Không có học viên nào đã mua khóa học này.
+                  </p>
+                )}
+              </>
             )}
-            <div>
-              <p><strong>Giá khóa học:</strong> {selectedCourse.price.toLocaleString()} VND</p>
-              <p><strong>Tổng doanh thu:</strong> {selectedCourse.totalRevenue.toLocaleString()} VND</p>
-              <p><strong>Số học viên:</strong> {selectedCourse.totalStudents}</p>
-              <p><strong>Lần thanh toán gần nhất:</strong> {selectedCourse.lastPayment ? 
-                new Date(selectedCourse.lastPayment).toLocaleDateString() : 'Chưa có'}</p>
-            </div>
-          </div>
-          
-          <h3 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>Danh sách học viên ({courseStudents.length})</h3>
-          {isStudentsLoading ? (
-            <div style={{ textAlign: 'center', padding: '1rem' }}>
-              <div className="loading-spinner" style={{ width: '1.5rem', height: '1.5rem' }} />
-              <p>Đang tải danh sách học viên...</p>
-            </div>
-          ) : courseStudents.length > 0 ? (
-            <div style={{ maxHeight: '300px', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: '6px', padding: '0.5rem' }}>
+          </Typography>
+          <button 
+            className="btn btn-primary"
+            onClick={handleCloseModal}
+            style={{ marginTop: '1rem' }}
+          >
+            Đóng
+          </button>
+        </Box>
+      </Modal>
+
+      {/* Modal hiển thị tất cả khóa học */}
+      <Modal
+        open={showAllCoursesModal}
+        onClose={() => setShowAllCoursesModal(false)}
+        aria-labelledby="all-courses-modal-title"
+        aria-describedby="all-courses-modal-description"
+      >
+        <Box className="modal-content" style={{ maxWidth: '600px' }}>
+          <Typography className="modal-title" variant="h6" component="h2">
+            Tất cả khóa học ({revenueData.length})
+          </Typography>
+          <Typography className="modal-body" sx={{ mt: 2 }}>
+            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Học viên</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Email</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Ngày mua</th>
-                    <th style={{ textAlign: 'left', padding: '0.5rem' }}>Giá</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem' }}>Khóa học</th>
+                    <th style={{ textAlign: 'left', padding: '0.75rem' }}>Doanh thu</th>
+                    {/* <th style={{ textAlign: 'left', padding: '0.75rem' }}>Tỷ lệ</th> */}
                   </tr>
                 </thead>
                 <tbody>
-                  {courseStudents.map(student => (
-                    <tr key={student._id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '0.5rem' }}>
+                  {revenueData.map((course, index) => (
+                    <tr key={course.courseId} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <td style={{ padding: '0.75rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          {student.avatar && (
-                            <img 
-                              src={student.avatar} 
-                              alt={student.username} 
-                              style={{ width: '32px', height: '32px', borderRadius: '50%' }}
-                            />
-                          )}
-                          <span>{student.username || student.email}</span>
+                          <div 
+                            className="legend-color" 
+                            style={{ 
+                              backgroundColor: COLORS[index % COLORS.length], 
+                              minWidth: '12px', 
+                              height: '12px', 
+                              borderRadius: '2px' 
+                            }}
+                          />
+                          <span>{course.courseTitle}</span>
                         </div>
                       </td>
-                      <td style={{ padding: '0.5rem' }}>{student.email}</td>
-                      <td style={{ padding: '0.5rem' }}>
-                        {student.purchasedAt ? new Date(student.purchasedAt).toLocaleDateString() : 'N/A'}
+                      <td style={{ padding: '0.75rem' }}>{course.totalRevenue.toLocaleString()} VND</td>
+                      <td style={{ padding: '0.75rem' }}>
+                        {/* {stats ? `${((course.totalRevenue / stats.totalRevenue) * 100).toFixed(1)}%` : 'N/A'} */}
                       </td>
-                      <td style={{ padding: '0.5rem' }}>{student.amount?.toLocaleString()} VND</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          ) : (
-            <p style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-light)' }}>
-              Không có học viên nào đã mua khóa học này.
-            </p>
-          )}
-        </>
-      )}
-    </Typography>
-    <button 
-      className="btn btn-primary"
-      onClick={handleCloseModal}
-      style={{ marginTop: '1rem' }}
-    >
-      Đóng
-    </button>
-  </Box>
-</Modal>
+          </Typography>
+          <button 
+            className="btn btn-primary"
+            onClick={() => setShowAllCoursesModal(false)}
+            style={{ marginTop: '1rem' }}
+          >
+            Đóng
+          </button>
+        </Box>
+      </Modal>
     </div>
   );
 };

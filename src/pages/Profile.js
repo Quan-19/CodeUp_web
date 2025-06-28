@@ -13,6 +13,7 @@ const Profile = ({ user, onUpdate }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -47,8 +48,15 @@ const Profile = ({ user, onUpdate }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.username.trim()) {
+      setError("Vui lòng nhập tên người dùng");
+      return;
+    }
+
     setLoading(true);
     setError("");
+    setSuccessMessage("");
 
     try {
       const formDataToSend = new FormData();
@@ -68,10 +76,12 @@ const Profile = ({ user, onUpdate }) => {
         }
       );
 
-      onUpdate(response.data);
+      onUpdate(response.data.user);
       setIsEditing(false);
+      setSuccessMessage("Cập nhật hồ sơ thành công!");
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
-      setError("Cập nhật thất bại. Vui lòng thử lại.");
+      setError(err.response?.data?.message || "Cập nhật thất bại. Vui lòng thử lại.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -79,7 +89,11 @@ const Profile = ({ user, onUpdate }) => {
   };
 
   if (!user) {
-    return <div className="profile-container"><div className="profile-message">Vui lòng đăng nhập để xem hồ sơ của bạn.</div></div>;
+    return (
+      <div className="profile-container">
+        <div className="profile-message">Vui lòng đăng nhập để xem hồ sơ của bạn.</div>
+      </div>
+    );
   }
 
   return (
@@ -87,15 +101,26 @@ const Profile = ({ user, onUpdate }) => {
       <div className="profile-header">
         <h2>Thông tin Hồ Sơ</h2>
         {!isEditing ? (
-          <button className="edit-button" onClick={() => setIsEditing(true)}>
+          <button 
+            className="edit-button" 
+            onClick={() => setIsEditing(true)}
+            disabled={loading}
+          >
             Chỉnh sửa
           </button>
         ) : (
-          <button className="cancel-button" onClick={() => setIsEditing(false)}>
+          <button 
+            className="cancel-button" 
+            onClick={() => setIsEditing(false)}
+            disabled={loading}
+          >
             Hủy
           </button>
         )}
       </div>
+
+      {error && <div className="error-message">{error}</div>}
+      {successMessage && <div className="success-message">{successMessage}</div>}
 
       {isEditing ? (
         <form onSubmit={handleSubmit} className="profile-form">
@@ -112,9 +137,10 @@ const Profile = ({ user, onUpdate }) => {
                 id="profilePicture"
                 accept="image/*"
                 onChange={handleImageChange}
+                disabled={loading}
               />
               <label htmlFor="profilePicture" className="upload-label">
-                Chọn ảnh
+                {loading ? "Đang tải..." : "Chọn ảnh"}
               </label>
             </div>
           </div>
@@ -127,6 +153,8 @@ const Profile = ({ user, onUpdate }) => {
               name="username"
               value={formData.username}
               onChange={handleInputChange}
+              disabled={loading}
+              required
             />
           </div>
 
@@ -149,13 +177,16 @@ const Profile = ({ user, onUpdate }) => {
               value={formData.bio}
               onChange={handleInputChange}
               rows="4"
+              disabled={loading}
             />
           </div>
 
-          {error && <div className="error-message">{error}</div>}
-
           <div className="form-actions">
-            <button type="submit" className="save-button" disabled={loading}>
+            <button 
+              type="submit" 
+              className="save-button" 
+              disabled={loading}
+            >
               {loading ? "Đang lưu..." : "Lưu thay đổi"}
             </button>
           </div>

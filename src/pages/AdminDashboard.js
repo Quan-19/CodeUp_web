@@ -23,6 +23,7 @@ const AdminDashboard = () => {
   const [revenueData, setRevenueData] = useState({ labels: [], datasets: [] });
   const [topInstructors, setTopInstructors] = useState({ labels: [], datasets: [] });
   const [instructorRevenue, setInstructorRevenue] = useState({ labels: [], datasets: [] });
+  const [courseMonthlyData, setCourseMonthlyData] = useState({ labels: [], datasets: [] });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -75,14 +76,16 @@ const AdminDashboard = () => {
           coursesResponse,
           revenueResponse,
           instructorsResponse,
-          instructorRevenueResponse
+          instructorRevenueResponse,
+          courseMonthlyResponse
         ] = await Promise.all([
           axios.get('http://localhost:5000/api/admin/stats'),
           axios.get('http://localhost:5000/api/admin/enrollment-stats'),
           axios.get('http://localhost:5000/api/admin/course-stats'),
           axios.get('http://localhost:5000/api/admin/revenue-stats'),
           axios.get('http://localhost:5000/api/admin/top-instructors'),
-          axios.get('http://localhost:5000/api/admin/instructor-revenue')
+          axios.get('http://localhost:5000/api/admin/instructor-revenue'),
+          axios.get('http://localhost:5000/api/admin/course-monthly-stats')
         ]);
 
         setStats({
@@ -135,6 +138,23 @@ const AdminDashboard = () => {
             backgroundColor: 'rgba(153, 102, 255, 0.2)',
             borderColor: 'rgba(153, 102, 255, 1)',
             borderWidth: 2
+          }]
+        });
+
+        // Process course monthly data
+        const courseMonthlyStats = courseMonthlyResponse.data;
+        const courseMonths = courseMonthlyStats.map(item => `Tháng ${item._id.month}/${item._id.year}`);
+        const courseCounts = courseMonthlyStats.map(item => item.count);
+        setCourseMonthlyData({
+          labels: courseMonths,
+          datasets: [{
+            label: 'Số khóa học',
+            data: courseCounts,
+            backgroundColor: 'rgba(255, 193, 7, 0.2)',
+            borderColor: 'rgba(255, 193, 7, 1)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true
           }]
         });
       }
@@ -230,15 +250,31 @@ const AdminDashboard = () => {
         position: 'top',
         labels: {
           usePointStyle: true,
-          padding: 20
+          padding: 20,
+          font: {
+            size: 14
+          }
         }
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleFont: { size: 14 },
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        titleFont: { size: 14, weight: 'bold' },
         bodyFont: { size: 12 },
         padding: 12,
-        cornerRadius: 6
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          label: function(context) {
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
+            }
+            if (context.parsed.y !== null) {
+              label += new Intl.NumberFormat('vi-VN').format(context.parsed.y);
+            }
+            return label;
+          }
+        }
       }
     },
     scales: {
@@ -247,6 +283,11 @@ const AdminDashboard = () => {
         grid: {
           drawBorder: false,
           color: 'rgba(0, 0, 0, 0.05)'
+        },
+        ticks: {
+          callback: function(value) {
+            return new Intl.NumberFormat('vi-VN').format(value);
+          }
         }
       },
       x: {
@@ -259,65 +300,51 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <h2 className="sidebar-title">Admin Panel</h2>
-        </div>
-        
-        <nav className="nav-menu">
-          <div className="nav-item">
-            <a 
-              className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-              onClick={() => setActiveTab('dashboard')}
-            >
-              <FiHome /> Tổng quan
-            </a>
-          </div>
-          <div className="nav-item">
-            <a 
-              className={`nav-link ${activeTab === 'users' ? 'active' : ''}`}
-              onClick={() => setActiveTab('users')}
-            >
-              <FiUsers /> Người dùng
-            </a>
-          </div>
-          <div className="nav-item">
-            <a 
-              className={`nav-link ${activeTab === 'courses' ? 'active' : ''}`}
-              onClick={() => setActiveTab('courses')}
-            >
-              <FiBook /> Khóa học
-            </a>
-          </div>
-          <button className="back-to-home-btn" onClick={() => navigate("/")}>
-            Trang chủ
-          </button>
-        </nav>
-      </aside>
-
       <main className="main-content">
         <header className="dashboard-header">
-          <h1 className="dashboard-title">
-            {activeTab === 'dashboard' ? 'Tổng quan' : 
-             activeTab === 'users' ? 'Quản lý người dùng' : 
-             'Quản lý khóa học'}
-          </h1>
-          
-          <div className="user-profile">
-            <img 
-              src="../../assets/anh1.jpg" 
-              alt="Admin" 
-              className="user-avatar"
-            />
-            <div>
-              <div className="font-weight-bold">Admin</div>
-              <div className="text-muted small">Quản trị viên</div>
+          <div>
+            <h1 className="dashboard-title">
+              {activeTab === 'dashboard' ? 'Tổng quan' : 
+              activeTab === 'users' ? 'Quản lý người dùng' : 
+              'Quản lý khóa học'}
+            </h1>
+            <div className="nav-tabs">
+              <button 
+                className={`nav-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
+                onClick={() => setActiveTab('dashboard')}
+              >
+                <FiHome size={16} /> Tổng quan
+              </button>
+              <button 
+                className={`nav-tab ${activeTab === 'users' ? 'active' : ''}`}
+                onClick={() => setActiveTab('users')}
+              >
+                <FiUsers size={16} /> Người dùng
+              </button>
+              <button 
+                className={`nav-tab ${activeTab === 'courses' ? 'active' : ''}`}
+                onClick={() => setActiveTab('courses')}
+              >
+                <FiBook size={16} /> Khóa học
+              </button>
             </div>
+          </div>
+          
+          <div className="header-actions">
+            <button 
+              className="btn btn-outline me-2"
+              onClick={() => navigate('/')}
+            >
+              <FiHome size={16} /> Trang chủ
+            </button>
           </div>
         </header>
 
         {error && (
           <div className="alert alert-danger mb-4">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 0C4.48 0 0 4.48 0 10C0 15.52 4.48 20 10 20C15.52 20 20 15.52 20 10C20 4.48 15.52 0 10 0ZM11 15H9V13H11V15ZM11 11H9V5H11V11Z" fill="#DC3545"/>
+            </svg>
             {error}
           </div>
         )}
@@ -325,87 +352,90 @@ const AdminDashboard = () => {
         {isLoading ? (
           <div className="loading-container">
             <div className="loading-spinner" />
-            <p className="text-muted">Đang tải dữ liệu...</p>
+            <p className="loading-text">Đang tải dữ liệu...</p>
           </div>
         ) : activeTab === 'dashboard' ? (
           <>
             <div className="stats-grid mb-5">
-              <div className="stat-card">
+              <div className="stat-card primary">
                 <div className="stat-card-header">
                   <span className="stat-card-title">Tổng người dùng</span>
                   <div className="stat-card-icon primary">
                     <FiUsers size={20} />
                   </div>
                 </div>
-                <h3 className="stat-card-value">{stats.totalUsers}</h3>
-                <div className={`stat-card-change ${stats.userChange >= 0 ? 'positive' : 'negative'}`}>
-                  {stats.userChange >= 0 ? <FiArrowUp /> : <FiArrowDown />}
-                  {Math.abs(stats.userChange)}% so với tháng trước
-                </div>
+                <h1 className="stat-card-value">{stats.totalUsers.toLocaleString()}</h1>
               </div>
               
-              <div className="stat-card">
+              <div className="stat-card success">
                 <div className="stat-card-header">
                   <span className="stat-card-title">Tổng khóa học</span>
                   <div className="stat-card-icon success">
                     <FiBook size={20} />
                   </div>
                 </div>
-                <h3 className="stat-card-value">{stats.totalCourses}</h3>
-                <div className="stat-card-change positive">
-                  <FiArrowUp />
-                  {stats.recentCourses} mới trong tháng
-                </div>
+                <h1 className="stat-card-value">{stats.totalCourses.toLocaleString()}</h1>
               </div>
               
-              <div className="stat-card">
+              <div className="stat-card warning">
                 <div className="stat-card-header">
                   <span className="stat-card-title">Tổng giảng viên</span>
                   <div className="stat-card-icon warning">
                     <FiUsers size={20} />
                   </div>
                 </div>
-                <h3 className="stat-card-value">{stats.totalInstructors}</h3>
-                <div className="stat-card-change positive">
-                  <FiArrowUp />
-                  5.2% so với tháng trước
-                </div>
+                <h1 className="stat-card-value">{stats.totalInstructors.toLocaleString()}</h1>
               </div>
               
-              <div className="stat-card">
+              <div className="stat-card danger">
                 <div className="stat-card-header">
                   <span className="stat-card-title">Doanh thu</span>
                   <div className="stat-card-icon danger">
                     <FiDollarSign size={20} />
                   </div>
                 </div>
-                <h3 className="stat-card-value">
-                  {revenueData.datasets[0]?.data.reduce((a, b) => a + b, 0).toLocaleString()} VND
-                </h3>
-                <div className={`stat-card-change ${stats.revenueChange >= 0 ? 'positive' : 'negative'}`}>
-                  {stats.revenueChange >= 0 ? <FiArrowUp /> : <FiArrowDown />}
-                  {Math.abs(stats.revenueChange)}% so với tháng trước
-                </div>
+                <h1 className="stat-card-value">
+                  {revenueData.datasets[0]?.data.reduce((a, b) => a + b, 0).toLocaleString('vi-VN')} VND
+                </h1>
               </div>
             </div>
 
             <div className="charts-grid mb-4">
-              <div className="chart-card">
-                <h3 className="chart-title">Doanh thu theo tháng</h3>
+              <div className="chart-card main-chart">
+                <h3 className="chart-title">
+                  <FiDollarSign size={20} />
+                   Doanh thu theo tháng
+                </h3>
                 <div className="chart-container">
                   <Line data={revenueData} options={chartOptions} />
                 </div>
               </div>
               
-              <div className="chart-card">
-                <h3 className="chart-title">Top giảng viên tích cực</h3>
+              <div className="chart-card secondary-chart">
+                <h3 className="chart-title">
+                  <FiBook size={20} />
+                   Khóa học theo tháng
+                </h3>
+                <div className="chart-container">
+                  <Line data={courseMonthlyData} options={chartOptions} />
+                </div>
+              </div>
+              
+              <div className="chart-card secondary-chart">
+                <h3 className="chart-title">
+                  <FiUsers size={20} />
+                   Top giảng viên tích cực
+                </h3>
                 <div className="chart-container">
                   <Bar data={topInstructors} options={chartOptions} />
                 </div>
               </div>
               
-              <div className="chart-card">
-                <h3 className="chart-title">Doanh thu theo giảng viên</h3>
+              <div className="chart-card tertiary-chart">
+                <h3 className="chart-title">
+                  <FiPieChart size={20} />
+                   Doanh thu theo giảng viên
+                </h3>
                 <div className="chart-container">
                   <Bar data={instructorRevenue} options={chartOptions} />
                 </div>
@@ -422,12 +452,12 @@ const AdminDashboard = () => {
               <div className="row">
                 <div className="col-md-3">
                   <select 
-                    className="form-control"
+                    className="form-control role-select"
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
                   >
                     <option value="">Tất cả vai trò</option>
-                    <option value="User">Người dùng</option>
+                    <option value="student">Người dùng</option>
                     <option value="instructor">Giảng viên</option>
                     <option value="admin">Quản trị viên</option>
                   </select>
@@ -459,7 +489,6 @@ const AdminDashboard = () => {
                   <th>Tên</th>
                   <th>Email</th>
                   <th>Vai trò</th>
-                  {/* <th>Trạng thái</th> */}
                   <th>Hành động</th>
                 </tr>
               </thead>
@@ -490,16 +519,6 @@ const AdminDashboard = () => {
                         <option value="admin">Quản trị viên</option>
                       </select>
                     </td>
-                    {/* <td>
-                      <select 
-                        value={user.active}
-                        onChange={(e) => handleStatusChange(user._id, e.target.value === 'true')}
-                        className="status-select"
-                      >
-                        <option value="true">Hoạt động</option>
-                        <option value="false">Đã khóa</option>
-                      </select>
-                    </td> */}
                     <td>
                       <div className="d-flex gap-2">
                         <button 
@@ -527,7 +546,7 @@ const AdminDashboard = () => {
               <h3 className="table-title">Danh sách khóa học</h3>
               <button 
                 className="btn btn-primary"
-                onClick={() => navigate('/admin/courses/new')}
+                onClick={() => navigate('/addcourse')}
               >
                 Thêm khóa học
               </button>
@@ -560,7 +579,6 @@ const AdminDashboard = () => {
                   <th>Tên khóa học</th>
                   <th>Giảng viên</th>
                   <th>Học viên</th>
-                  {/* <th>Trạng thái</th> */}
                   <th>Hành động</th>
                 </tr>
               </thead>
@@ -580,12 +598,7 @@ const AdminDashboard = () => {
                         {course.instructor?.username || 'N/A'}
                       </div>
                     </td>
-                    <td>{course.enrolledUsers?.length || 0}</td>
-                    {/* <td>
-                      <span className={`badge ${course.published ? 'badge-success' : 'badge-warning'}`}>
-                        {course.published ? 'Đã xuất bản' : 'Đã xuất bản'}
-                      </span>
-                    </td> */}
+                    <td>{(course.enrolledUsers?.length || 0) - 2}</td>
                     <td>
                       <div className="d-flex gap-2">
                         <button 
