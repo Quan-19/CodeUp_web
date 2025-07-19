@@ -1,12 +1,14 @@
-// src/pages/MyCourses.js
 import React, { useEffect, useState } from "react";
 import CourseCard from "../components/CourseCard";
-import "./Home.css"; // có thể dùng lại style
+import "./Home.css";
 
 const MyCourses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const coursesPerPage = 8;
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -17,11 +19,11 @@ const MyCourses = () => {
         return res.json();
       })
       .then((data) => {
-        // Lọc ra những khóa học mà user đã đăng ký
         const enrolledCourses = data.filter((course) =>
           course.enrolledUsers?.includes(user?.id)
         );
         setCourses(enrolledCourses);
+        setTotalPages(Math.ceil(enrolledCourses.length / coursesPerPage));
         setLoading(false);
       })
       .catch((err) => {
@@ -31,6 +33,18 @@ const MyCourses = () => {
       });
   }, [user?.id]);
 
+  const indexOfLastCourse = currentPage * coursesPerPage;
+  const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
+  const currentCourses = courses.slice(indexOfFirstCourse, indexOfLastCourse);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
+
   return (
     <div className="home">
       <h2>Khóa học đã đăng ký</h2>
@@ -38,14 +52,40 @@ const MyCourses = () => {
         <p>Đang tải khóa học...</p>
       ) : error ? (
         <p style={{ color: "red" }}>Lỗi: {error}</p>
-      ) : courses.length === 0 ? (
+      ) : currentCourses.length === 0 ? (
         <p>Bạn chưa đăng ký khóa học nào.</p>
       ) : (
-        <div className="course-list">
-          {courses.map((course) => (
-            <CourseCard key={course._id} course={course} />
-          ))}
-        </div>
+        <>
+          <div key={currentPage} className="course-list fade-page">
+            {currentCourses.map((course) => (
+              <CourseCard key={course._id} course={course} />
+            ))}
+          </div>
+          
+          {courses.length > coursesPerPage && (
+            <div className="pagination">
+              <button 
+                onClick={handlePrevPage} 
+                disabled={currentPage === 1}
+                className="pagination-button"
+              >
+                « Trang trước
+              </button>
+              
+              <span className="page-info">
+                Trang {currentPage} / {totalPages}
+              </span>
+              
+              <button 
+                onClick={handleNextPage} 
+                disabled={currentPage === totalPages}
+                className="pagination-button"
+              >
+                Trang sau »
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

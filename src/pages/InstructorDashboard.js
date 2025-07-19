@@ -459,7 +459,16 @@ const InstructorDashboard = () => {
                 <tbody>
                   {filteredCourses.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(course => (
                     <tr key={course._id}>
-                      <td style={{ fontWeight: 500 }}>{course.title}</td>
+                      <td style={{ 
+                          fontWeight: 500,
+                          maxWidth: '300px',
+                          whiteSpace: 'pre-wrap',
+                          wordWrap: 'break-word',
+                          lineHeight: '1.4',
+                          padding: '8px 12px'
+                        }}>
+                          {course.title}
+                        </td>
                       <td>{course.studentCount}</td>
                       <td>{course.revenue.toLocaleString()} VND</td>
                       <td>
