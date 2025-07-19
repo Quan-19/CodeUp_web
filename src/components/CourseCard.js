@@ -1,3 +1,4 @@
+// CourseCard.js
 import React, { useState, useEffect } from "react";
 import "./CourseCard.css";
 import {
@@ -9,9 +10,13 @@ import {
 } from "react-icons/fa";
 import DOMPurify from 'dompurify';
 
-const CourseCard = ({ course, refreshCourses, isInitiallyFavorite, onFavoriteToggle }) => {
+const CourseCard = ({
+  course,
+  refreshCourses,
+  isInitiallyFavorite,
+  onFavoriteToggle,
+}) => {
   const [loading, setLoading] = useState(false);
-  const [paymentWindow, setPaymentWindow] = useState(null);
   const [isFavorite, setIsFavorite] = useState(isInitiallyFavorite || false);
 
   const user = JSON.parse(localStorage.getItem("user"));
@@ -44,15 +49,9 @@ const CourseCard = ({ course, refreshCourses, isInitiallyFavorite, onFavoriteTog
         body: JSON.stringify({ courseId: course._id, userId }),
       });
       const data = await response.json();
-      if (response.ok) {
-        const newWindow = window.open(data.url, "_blank", "width=600,height=800");
-        setPaymentWindow(newWindow);
-        const checkWindow = setInterval(() => {
-          if (newWindow.closed) {
-            clearInterval(checkWindow);
-            refreshCourses?.();
-          }
-        }, 500);
+
+      if (response.ok && data.url) {
+        window.location.href = data.url;
       } else {
         alert(data.message || "Lỗi khởi tạo thanh toán");
       }
@@ -108,16 +107,18 @@ const CourseCard = ({ course, refreshCourses, isInitiallyFavorite, onFavoriteTog
     const fullStars = Math.floor(rating);
     const halfStar = rating - fullStars >= 0.5;
     const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
-    for (let i = 0; i < fullStars; i++) stars.push(<FaStar key={"full" + i} color="#ffc107" />);
+    for (let i = 0; i < fullStars; i++)
+      stars.push(<FaStar key={"full" + i} color="#ffc107" />);
     if (halfStar) stars.push(<FaStarHalfAlt key="half" color="#ffc107" />);
-    for (let i = 0; i < emptyStars; i++) stars.push(<FaRegStar key={"empty" + i} color="#ccc" />);
+    for (let i = 0; i < emptyStars; i++)
+      stars.push(<FaRegStar key={"empty" + i} color="#ccc" />);
     return stars;
   };
 
-  const renderHTML = (html) => {
-    if (!html) return null;
-    const cleanHTML = DOMPurify.sanitize(html);
-    return <div className="quill-content" dangerouslySetInnerHTML={{ __html: cleanHTML }} />;
+  const renderSafeHTML = (htmlContent) => {
+    if (!htmlContent) return null;
+    const cleanHTML = DOMPurify.sanitize(htmlContent);
+    return <div className="course-description" dangerouslySetInnerHTML={{ __html: cleanHTML }} />;
   };
 
   return (
@@ -126,31 +127,41 @@ const CourseCard = ({ course, refreshCourses, isInitiallyFavorite, onFavoriteTog
       <div className="course-info">
         <div className="header-row">
           <h3>{course.title}</h3>
-          <button onClick={toggleFavorite} className="favorite-button" aria-label="Toggle favorite">
+          <button
+            onClick={toggleFavorite}
+            className="favorite-button"
+            aria-label="Toggle favorite"
+          >
             <span style={{ color: isFavorite ? "#ff3860" : "#7a7a7a" }}>
               {isFavorite ? <FaHeart /> : <FaRegHeart />}
             </span>
           </button>
         </div>
-        
-        {renderHTML(course.description)}
-        
+        {renderSafeHTML(course.description)}
         <div className="rating-display">
           {renderStars(course.averageRating || 0)}
-          <span style={{ fontSize: "0.9rem", color: "#555" }}>
-            ({course.ratingCount || 0} đánh giá)
-          </span>
+          <span>({course.ratingCount || 0} đánh giá)</span>
         </div>
-        
         <div className="meta-info">
           <span className="price">💰 {course.price.toLocaleString()} VND</span>
-          <span className={`level ${course.level.toLowerCase()}`}>{course.level}</span>
+          <span className={`level ${course.level.toLowerCase()}`}>
+            {course.level}
+          </span>
         </div>
-        
         <div className="action-buttons">
-          <button className="preview-button" onClick={handleViewMore}>👀 Xem trước</button>
-          <button className={`purchase-button ${isEnrolled ? "purchased" : ""}`} onClick={handlePayment} disabled={loading || isEnrolled}>
-            {loading ? "🔄 Đang xử lý..." : isEnrolled ? "✅ Đã sở hữu" : "💳 Mua ngay"}
+          <button className="preview-button" onClick={handleViewMore}>
+            👀 Xem trước
+          </button>
+          <button
+            className={`purchase-button ${isEnrolled ? "purchased" : ""}`}
+            onClick={handlePayment}
+            disabled={loading || isEnrolled}
+          >
+            {loading
+              ? "🔄 Đang xử lý..."
+              : isEnrolled
+              ? "✅ Đã sở hữu"
+              : "💳 Mua ngay"}
           </button>
         </div>
       </div>

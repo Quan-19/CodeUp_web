@@ -117,23 +117,69 @@ const InstructorDashboard = () => {
     }
   };
 
-  const handleDeleteCourse = async (id) => {
-    const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa khóa học này?');
-    if (!confirmDelete) return;
+ const handleDeleteCourse = async (courseId) => {
+  const confirmDelete = window.confirm(
+    'Bạn có chắc chắn muốn xóa khóa học này?\n\n' +
+    'Không thể hoàn tác sau khi xóa!'
+  );
+  
+  if (!confirmDelete) return;
 
-    try {
-      await axios.delete(`http://localhost:5000/api/courses/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      setCourses(courses.filter(course => course._id !== id));
-      alert('Đã xóa khóa học thành công!');
-    } catch (err) {
-      setError('Xóa khóa học thất bại.');
-      alert('Xóa khóa học thất bại. Vui lòng thử lại.');
+  try {
+    const userId = user?.id;
+    if (!userId) {
+      throw new Error('Vui lòng đăng nhập để thực hiện thao tác này');
     }
-  };
+
+    const response = await axios.delete(
+      `http://localhost:5000/api/instructor/courses/${userId}/${courseId}`
+    );
+
+    if (response.data.success) {
+      // Cập nhật UI
+      setCourses(courses.filter(course => course._id !== courseId));
+      
+      // Hiển thị thông báo thành công với animation
+      const successMessage = document.createElement('div');
+      successMessage.textContent = '✅ Đã xóa khóa học và tất cả dữ liệu liên quan';
+      successMessage.style.position = 'fixed';
+      successMessage.style.top = '20px';
+      successMessage.style.right = '20px';
+      successMessage.style.padding = '15px';
+      successMessage.style.background = '#4CAF50';
+      successMessage.style.color = 'white';
+      successMessage.style.borderRadius = '5px';
+      successMessage.style.zIndex = '1000';
+      successMessage.style.animation = 'slideIn 0.5s, fadeOut 0.5s 2.5s';
+      
+      document.body.appendChild(successMessage);
+      setTimeout(() => {
+        document.body.removeChild(successMessage);
+      }, 3000);
+    } else {
+      throw new Error(response.data.message || 'Xóa khóa học thất bại');
+    }
+  } catch (err) {
+    console.error('Lỗi khi xóa khóa học:', err);
+    
+    // Hiển thị thông báo lỗi chi tiết
+    let errorMessage = 'Xóa khóa học thất bại';
+    if (err.response?.data?.message) {
+      errorMessage = err.response.data.message;
+    } else if (err.message) {
+      errorMessage = err.message;
+    }
+    
+    setError(errorMessage);
+    alert(`❌ ${errorMessage}\n\nVui lòng thử lại hoặc liên hệ hỗ trợ.`);
+    
+    // Nếu lỗi liên quan đến xác thực
+    if (err.response?.status === 403 || err.message.includes('đăng nhập')) {
+      localStorage.removeItem('user');
+      navigate('/login');
+    }
+  }
+};
 
   const togglePublishStatus = async (courseId, currentStatus) => {
     try {
@@ -546,7 +592,7 @@ const InstructorDashboard = () => {
                         <td>
                           <button 
                             className="btn btn-sm btn-outline" 
-                            onClick={() => navigate(`/users/${student._id}`)}
+                            onClick={() => navigate(`/profile/${student._id}`)}
                           >
                             Xem hồ sơ
                           </button>

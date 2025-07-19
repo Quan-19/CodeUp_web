@@ -201,24 +201,27 @@ const AdminDashboard = () => {
   };
 
   const handleDelete = async (id, type) => {
-    const confirmDelete = window.confirm(`Bạn có chắc chắn muốn xóa ${type === 'users' ? 'người dùng' : 'khóa học'} này?`);
-    if (!confirmDelete) return;
+  const confirmDelete = window.confirm(
+    `Bạn có chắc chắn muốn xóa ${type === 'users' ? 'người dùng' : 'khóa học'} này?`
+  );
+  if (!confirmDelete) return;
 
-    try {
-      await axios.delete(`http://localhost:5000/api/admin/${type}/${id}`);
-      if (type === 'users') {
-        setUsers(users.filter(user => user._id !== id));
-        alert('Đã xóa người dùng thành công!');
-      } else {
-        setCourses(courses.filter(course => course._id !== id));
-        alert('Đã xóa khóa học thành công!');
-      }
-    } catch (err) {
-      setError(`Xóa ${type === 'users' ? 'người dùng' : 'khóa học'} thất bại. Vui lòng thử lại.`);
-      alert(`Xóa ${type === 'users' ? 'người dùng' : 'khóa học'} thất bại. Vui lòng thử lại.`);
-      console.error('Delete error:', err);
+  try {
+    await axios.delete(`http://localhost:5000/api/admin/${type}/${id}`);
+    
+    // Cập nhật UI ngay lập tức thay vì đợi fetchData
+    if (type === 'users') {
+      setUsers(prev => prev.filter(user => user._id !== id));
+    } else {
+      setCourses(prev => prev.filter(course => course._id !== id));
     }
-  };
+    
+    alert(`Đã xóa ${type === 'users' ? 'người dùng' : 'khóa học'} thành công!`);
+  } catch (err) {
+    console.error('Delete error:', err);
+    alert(`Xóa thất bại: ${err.response?.data?.message || err.message}`);
+  }
+};
 
   const handleSearch = () => {
     if (searchTimeout) {

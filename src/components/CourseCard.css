@@ -1,86 +1,80 @@
+/* CourseCard.css */
 .course-card {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 320px;
-  height: auto;
-  min-height: 550px;
+  max-width: 300px;
+  height: 480px; /* Chiều cao cố định */
   background: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  transition: all 0.2s ease;
   position: relative;
-  margin: 12px;
+  margin: 10px;
 }
 
 .course-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .course-image {
   width: 100%;
-  height: 180px;
+  height: 160px;
   object-fit: cover;
-  border-radius: 8px 8px 0 0;
-  margin-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .course-info {
-  padding: 0 16px 16px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  height: 100%;
+  gap: 12px;
+  height: 320px; /* 480px - 160px (ảnh) */
+  overflow: hidden;
 }
 
 .header-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
   gap: 8px;
-  margin-bottom: 8px;
 }
 
 .header-row h3 {
-  font-size: 1.3rem;
-  color: #1a237e;
-  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+  font-weight: 600;
   margin: 0;
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
   min-height: 2.8em;
-  max-height: 2.8em;
-  flex-grow: 1;
 }
 
-.quill-content {
-  font-size: 0.95rem;
-  color: #616161;
+.course-description {
+  font-size: 0.9rem;
+  color: #555;
   line-height: 1.5;
-  margin: 0 0 16px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  max-height: 4.5em;
-  flex-shrink: 0;
+  flex-grow: 1;
 }
 
-.quill-content p {
-  margin: 0.5em 0;
+.course-description p {
+  margin: 0;
 }
 
 .rating-display {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #555;
   flex-shrink: 0;
 }
 
@@ -89,96 +83,88 @@
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
-  padding: 12px 0;
   flex-shrink: 0;
 }
 
 .price {
-  font-weight: 700;
-  color: #1b5e20;
-  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 1rem;
 }
 
 .level {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  padding: 4px 8px;
+  border-radius: 12px;
 }
 
 .level.beginner {
-  background: #e8f5e9;
-  color: #2e7d32;
+  background: #f0fdf4;
+  color: #166534;
 }
 
 .level.intermediate {
-  background: #fff3e0;
-  color: #ef6c00;
+  background: #fff7ed;
+  color: #9a3412;
 }
 
 .level.advanced {
-  background: #fbe9e7;
-  color: #d84315;
+  background: #fef2f2;
+  color: #991b1b;
 }
 
 .action-buttons {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   margin-top: auto;
+  padding-top: 8px;
   flex-shrink: 0;
+}
+
+.preview-button,
+.purchase-button {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
 }
 
 .preview-button {
   background: none;
-  border: 2px solid #1565c0;
-  color: #1565c0;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  flex: 1;
+  border: 1px solid #2563eb;
+  color: #2563eb;
 }
 
 .preview-button:hover {
-  background: #1565c0;
-  color: white;
+  background: #eff6ff;
 }
 
 .purchase-button {
-  background: #1565c0;
+  background: #2563eb;
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .purchase-button:hover:not(:disabled) {
-  background: #0d47a1;
-  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.25);
+  background: #1d4ed8;
 }
 
 .purchase-button:disabled {
-  background: #607d8b;
+  background: #94a3b8;
   cursor: not-allowed;
-  opacity: 0.9;
 }
 
 .purchase-button.purchased {
-  background: #2e7d32;
+  background: #16a34a;
 }
 
 .purchase-button.purchased:hover {
-  background: #1b5e20;
+  background: #15803d;
 }
 
 .favorite-button {
@@ -186,17 +172,14 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  outline: none;
   flex-shrink: 0;
-  margin-top: 4px;
 }
 
 .favorite-button span {
-  color: #7a7a7a;
-  font-size: 1.4rem;
-  transition: color 0.3s ease;
+  transition: all 0.2s ease;
+  font-size: 1.2rem;
 }
 
-.favorite-button span:hover {
-  color: #ff3860;
+.favorite-button:hover span {
+  transform: scale(1.1);
 }
