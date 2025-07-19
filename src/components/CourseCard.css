@@ -2,8 +2,9 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 600px;
   max-width: 320px;
+  height: auto;
+  min-height: 550px;
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
@@ -31,17 +32,34 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  height: 100%;
 }
 
-.course-info h3 {
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.header-row h3 {
   font-size: 1.3rem;
   color: #1a237e;
   font-weight: 700;
-  margin: 0 0 12px;
+  margin: 0;
   line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 2.8em;
+  max-height: 2.8em;
+  flex-grow: 1;
 }
 
-.description {
+.quill-content {
   font-size: 0.95rem;
   color: #616161;
   line-height: 1.5;
@@ -50,6 +68,20 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  max-height: 4.5em;
+  flex-shrink: 0;
+}
+
+.quill-content p {
+  margin: 0.5em 0;
+}
+
+.rating-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .meta-info {
@@ -58,6 +90,7 @@
   align-items: center;
   margin-top: auto;
   padding: 12px 0;
+  flex-shrink: 0;
 }
 
 .price {
@@ -93,7 +126,8 @@
 .action-buttons {
   display: flex;
   gap: 12px;
-  /* margin-top: 16px; */
+  margin-top: auto;
+  flex-shrink: 0;
 }
 
 .preview-button {
@@ -147,30 +181,22 @@
   background: #1b5e20;
 }
 
-.header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.icon-favorite,
-.icon-favorite * {
-  fill: currentColor !important;
-  stroke: currentColor !important;
-}
-.icon-favorite {
-  font-size: 1.4rem;
-  color: #7a7a7a; /* màu mặc định */
-  transition: transform 0.2s ease, color 0.3s ease;
-}
-
-.icon-favorite.active {
-  color: #ff3860 !important; /* màu đỏ khi active */
-}
 .favorite-button {
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
   outline: none;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.favorite-button span {
+  color: #7a7a7a;
+  font-size: 1.4rem;
+  transition: color 0.3s ease;
+}
+
+.favorite-button span:hover {
+  color: #ff3860;
 }

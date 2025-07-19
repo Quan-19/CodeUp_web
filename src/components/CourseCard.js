@@ -7,6 +7,7 @@ import {
   FaStarHalfAlt,
   FaRegStar,
 } from "react-icons/fa";
+import DOMPurify from 'dompurify';
 
 const CourseCard = ({ course, refreshCourses, isInitiallyFavorite, onFavoriteToggle }) => {
   const [loading, setLoading] = useState(false);
@@ -113,6 +114,12 @@ const CourseCard = ({ course, refreshCourses, isInitiallyFavorite, onFavoriteTog
     return stars;
   };
 
+  const renderHTML = (html) => {
+    if (!html) return null;
+    const cleanHTML = DOMPurify.sanitize(html);
+    return <div className="quill-content" dangerouslySetInnerHTML={{ __html: cleanHTML }} />;
+  };
+
   return (
     <div className="course-card">
       <img src={course.imageUrl} alt={course.title} className="course-image" />
@@ -120,22 +127,26 @@ const CourseCard = ({ course, refreshCourses, isInitiallyFavorite, onFavoriteTog
         <div className="header-row">
           <h3>{course.title}</h3>
           <button onClick={toggleFavorite} className="favorite-button" aria-label="Toggle favorite">
-            <span style={{ color: isFavorite ? "#ff3860" : "#7a7a7a", fontSize: "1.4rem" }}>
+            <span style={{ color: isFavorite ? "#ff3860" : "#7a7a7a" }}>
               {isFavorite ? <FaHeart /> : <FaRegHeart />}
             </span>
           </button>
         </div>
-        <p className="description">{course.description}</p>
-        <div className="rating-display" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        
+        {renderHTML(course.description)}
+        
+        <div className="rating-display">
           {renderStars(course.averageRating || 0)}
           <span style={{ fontSize: "0.9rem", color: "#555" }}>
             ({course.ratingCount || 0} đánh giá)
           </span>
         </div>
+        
         <div className="meta-info">
           <span className="price">💰 {course.price.toLocaleString()} VND</span>
           <span className={`level ${course.level.toLowerCase()}`}>{course.level}</span>
         </div>
+        
         <div className="action-buttons">
           <button className="preview-button" onClick={handleViewMore}>👀 Xem trước</button>
           <button className={`purchase-button ${isEnrolled ? "purchased" : ""}`} onClick={handlePayment} disabled={loading || isEnrolled}>

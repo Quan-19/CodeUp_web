@@ -3,6 +3,25 @@ import axios from "axios";
 import "./AddCourse.css";
 import { useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import QuillWrapper from "../components/QuillWrapper";
+import 'react-quill/dist/quill.snow.css';
+
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['link', 'image'],
+    ['clean'],
+  ],
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet',
+  'link', 'image'
+];
 
 const AddCourse = () => {
   const [formData, setFormData] = useState(() => {
@@ -77,6 +96,13 @@ const AddCourse = () => {
     }
   };
 
+  const handleDescriptionChange = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      description: value
+    }));
+  };
+
   const handleChapterChange = (index, field, value) => {
     const newChapters = [...formData.details.chapters];
     newChapters[index][field] = value;
@@ -89,9 +115,33 @@ const AddCourse = () => {
     }));
   };
 
+  const handleChapterDescriptionChange = (index, value) => {
+    const newChapters = [...formData.details.chapters];
+    newChapters[index].description = value;
+    setFormData((prev) => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        chapters: newChapters,
+      },
+    }));
+  };
+
   const handleLessonChange = (chapterIndex, lessonIndex, field, value) => {
     const newChapters = [...formData.details.chapters];
     newChapters[chapterIndex].lessons[lessonIndex][field] = value;
+    setFormData((prev) => ({
+      ...prev,
+      details: {
+        ...prev.details,
+        chapters: newChapters,
+      },
+    }));
+  };
+
+  const handleLessonContentChange = (chapterIndex, lessonIndex, value) => {
+    const newChapters = [...formData.details.chapters];
+    newChapters[chapterIndex].lessons[lessonIndex].content = value;
     setFormData((prev) => ({
       ...prev,
       details: {
@@ -202,6 +252,7 @@ const AddCourse = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Dữ liệu gửi đi:", formData);
     setLoading(true);
     setError("");
     setSuccess("");
@@ -553,16 +604,15 @@ const AddCourse = () => {
           </div>
 
           <div className="form-group">
-            <label>
-              Mô Tả Khóa Học <span className="required">*</span>
-            </label>
-            <textarea
-              name="description"
-              placeholder="Mô tả chi tiết về khóa học..."
+            <label>Mô Tả Khóa Học <span className="required">*</span></label>
+            <QuillWrapper
+              theme="snow"
+              modules={quillModules}
+              formats={quillFormats}
               value={formData.description}
-              onChange={handleChange}
-              rows={5}
-              required
+              onChange={handleDescriptionChange}
+              placeholder="Mô tả chi tiết về khóa học..."
+              className="quill-editor"
             />
           </div>
         </div>
@@ -719,13 +769,14 @@ const AddCourse = () => {
 
                               <div className="form-group">
                                 <label>Mô Tả Chương</label>
-                                <textarea
-                                  placeholder="Mô tả nội dung chương này..."
+                                <QuillWrapper
+                                  theme="snow"
+                                  modules={quillModules}
+                                  formats={quillFormats}
                                   value={chapter.description}
-                                  onChange={(e) =>
-                                    handleChapterChange(cIdx, "description", e.target.value)
-                                  }
-                                  rows={3}
+                                  onChange={(value) => handleChapterDescriptionChange(cIdx, value)}
+                                  placeholder="Mô tả nội dung chương này..."
+                                  className="quill-editor"
                                 />
                               </div>
 
@@ -774,18 +825,14 @@ const AddCourse = () => {
 
                                     <div className="form-group">
                                       <label>Nội Dung</label>
-                                      <textarea
-                                        placeholder="Nội dung chi tiết bài học..."
+                                      <QuillWrapper
+                                        theme="snow"
+                                        modules={quillModules}
+                                        formats={quillFormats}
                                         value={lesson.content}
-                                        onChange={(e) =>
-                                          handleLessonChange(
-                                            cIdx,
-                                            lIdx,
-                                            "content",
-                                            e.target.value
-                                          )
-                                        }
-                                        rows={3}
+                                        onChange={(value) => handleLessonContentChange(cIdx, lIdx, value)}
+                                        placeholder="Nội dung chi tiết bài học..."
+                                        className="quill-editor"
                                       />
                                     </div>
 
@@ -832,7 +879,7 @@ const AddCourse = () => {
         </div>
 
         {/* Phần Câu Hỏi Trắc Nghiệm */}
-        {/* <div className="form-section quiz-section">
+        <div className="form-section quiz-section">
           <div className="section-header">
             <h3>Câu Hỏi Trắc Nghiệm</h3>
             <button
@@ -999,7 +1046,7 @@ const AddCourse = () => {
               ))}
             </div>
           )}
-        </div> */}
+        </div>
 
         {/* Các Nút Hành Động */}
         <div className="form-actions">

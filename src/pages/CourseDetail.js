@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import RatingForm from "../components/RatingForm";
 import QuizViewer from "../components/QuizViewer";
 import "./CourseDetail.css";
+import DOMPurify from 'dompurify'; // Thêm thư viện để làm sạch HTML
 
 const CourseDetail = () => {
   const { id } = useParams();
@@ -76,37 +77,12 @@ const CourseDetail = () => {
     );
   };
 
-  const renderLessonContent = (content) => {
-    if (!content) return null;
-    const parts = content.split(/\n(?=Bước \d+:|👉|💡|📝|```)/);
-
-    return parts.map((step, i) => {
-      if (step.startsWith("```")) {
-        return (
-          <div key={i} className="code-step">
-            <pre>
-              <code>{step.replace(/```/g, "").trim()}</code>
-            </pre>
-          </div>
-        );
-      }
-
-      const typeClass = step.startsWith("Bước")
-        ? "step-item"
-        : step.startsWith("👉")
-        ? "tip-step"
-        : step.startsWith("💡")
-        ? "important-step"
-        : step.startsWith("📝")
-        ? "note-step"
-        : "";
-
-      return (
-        <div key={i} className={`step ${typeClass}`}>
-          {step}
-        </div>
-      );
-    });
+  // Hàm render nội dung HTML từ Quill
+  const renderHTML = (html) => {
+    if (!html) return null;
+    // Làm sạch HTML trước khi render để tránh XSS
+    const cleanHTML = DOMPurify.sanitize(html);
+    return <div className="quill-content" dangerouslySetInnerHTML={{ __html: cleanHTML }} />;
   };
 
   const handleTabChange = (tab) => {
@@ -125,7 +101,7 @@ const CourseDetail = () => {
             <span className="chapter-number">Chương {ci + 1}:</span>{" "}
             {chapter.title}
           </h3>
-          <p>{chapter.description}</p>
+          {renderHTML(chapter.description)}
           {chapter.lessons?.map((lesson, li) => {
             const video = getYouTubeEmbedUrl(lesson.videoUrl);
             return (
@@ -134,11 +110,7 @@ const CourseDetail = () => {
                   <span className="lesson-number">Bài {li + 1}:</span>{" "}
                   {lesson.title}
                 </h4>
-                {lesson.content && (
-                  <div className="lesson-steps">
-                    {renderLessonContent(lesson.content)}
-                  </div>
-                )}
+                {renderHTML(lesson.content)}
                 {lesson.videoUrl && (
                   <div className="lesson-video">
                     {video ? (
@@ -174,7 +146,7 @@ const CourseDetail = () => {
   const renderOverview = () => (
     <div className="section">
       <h2>Giới thiệu khóa học</h2>
-      <p>{course.description || course.details?.content}</p>
+      {renderHTML(course.description || course.details?.content)}
 
       {course.details?.syllabus && (
         <>
@@ -240,11 +212,11 @@ const CourseDetail = () => {
         <h1>{course.title}</h1>
         <div className="course-meta">
           <div className="meta-item">
-            <span className="meta-icon">👥</span> {course.students} Học Viên
+            {/* <span className="meta-icon">👥</span> {course.students} Học Viên */}
           </div>
           <div className="meta-item">
             <span className="meta-icon">⏳</span>{" "}
-            {course.details?.duration || course.duration}
+            {course.details?.duration || course.duration} giờ
           </div>
           {isPreviewMode && (
             <div className="meta-item" style={{ color: "#e53935", fontWeight: "bold" }}>

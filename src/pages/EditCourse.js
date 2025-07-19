@@ -2,7 +2,26 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import QuillWrapper from "../components/QuillWrapper";
+import 'react-quill/dist/quill.snow.css';
 import "./AddCourse.css"; // Sử dụng cùng file CSS với AddCourse
+
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['link', 'image'],
+    ['clean'],
+  ],
+};
+
+const quillFormats = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet',
+  'link', 'image'
+];
 
 const EditCourse = () => {
   const { id } = useParams();
@@ -93,15 +112,37 @@ const EditCourse = () => {
     }
   };
 
-  const handleImageUpload = (e) => {
+  const handleDescriptionChange = (value) => {
+    setCourse(prev => ({
+      ...prev,
+      description: value
+    }));
+  };
+
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-        setCourse((prev) => ({ ...prev, imageUrl: reader.result }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const formDataImage = new FormData();
+    formDataImage.append("image", file);
+
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/upload",
+        formDataImage,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      setCourse((prev) => ({
+        ...prev,
+        imageUrl: res.data.imageUrl,
+      }));
+      setPreviewImage(URL.createObjectURL(file));
+      setError("");
+    } catch (err) {
+      console.error(err);
+      setError("Tải lên hình ảnh thất bại");
     }
   };
 
@@ -163,6 +204,21 @@ const EditCourse = () => {
     });
   };
 
+  const handleChapterDescriptionChange = (chapterIndex, value) => {
+    setCourse((prev) => {
+      const newChapters = [...prev.details.chapters];
+      newChapters[chapterIndex].description = value;
+
+      return {
+        ...prev,
+        details: {
+          ...prev.details,
+          chapters: newChapters,
+        },
+      };
+    });
+  };
+
   const addLesson = (chapterIndex) => {
     setCourse((prev) => {
       const newChapters = [...prev.details.chapters];
@@ -213,6 +269,31 @@ const EditCourse = () => {
       newLessons[lessonIndex] = {
         ...newLessons[lessonIndex],
         [field]: value,
+      };
+
+      newChapters[chapterIndex] = {
+        ...newChapters[chapterIndex],
+        lessons: newLessons,
+      };
+
+      return {
+        ...prev,
+        details: {
+          ...prev.details,
+          chapters: newChapters,
+        },
+      };
+    });
+  };
+
+  const handleLessonContentChange = (chapterIndex, lessonIndex, value) => {
+    setCourse((prev) => {
+      const newChapters = [...prev.details.chapters];
+      const newLessons = [...newChapters[chapterIndex].lessons];
+
+      newLessons[lessonIndex] = {
+        ...newLessons[lessonIndex],
+        content: value,
       };
 
       newChapters[chapterIndex] = {
@@ -537,16 +618,15 @@ const EditCourse = () => {
           </div>
 
           <div className="form-group">
-            <label>
-              Mô Tả Khóa Học <span className="required">*</span>
-            </label>
-            <textarea
-              name="description"
-              placeholder="Mô tả chi tiết về khóa học..."
+            <label>Mô Tả Khóa Học <span className="required">*</span></label>
+            <QuillWrapper
+              theme="snow"
+              modules={quillModules}
+              formats={quillFormats}
               value={course.description}
-              onChange={handleChange}
-              rows={5}
-              required
+              onChange={handleDescriptionChange}
+              placeholder="Mô tả chi tiết về khóa học..."
+              className="quill-editor"
             />
           </div>
         </div>
@@ -708,13 +788,14 @@ const EditCourse = () => {
 
                               <div className="form-group">
                                 <label>Mô Tả Chương</label>
-                                <textarea
-                                  placeholder="Mô tả nội dung chương này..."
+                                <QuillWrapper
+                                  theme="snow"
+                                  modules={quillModules}
+                                  formats={quillFormats}
                                   value={chapter.description}
-                                  onChange={(e) =>
-                                    handleChapterChange(cIdx, "description", e.target.value)
-                                  }
-                                  rows={3}
+                                  onChange={(value) => handleChapterDescriptionChange(cIdx, value)}
+                                  placeholder="Mô tả nội dung chương này..."
+                                  className="quill-editor"
                                 />
                               </div>
 
@@ -763,18 +844,14 @@ const EditCourse = () => {
 
                                     <div className="form-group">
                                       <label>Nội Dung</label>
-                                      <textarea
-                                        placeholder="Nội dung chi tiết bài học..."
+                                      <QuillWrapper
+                                        theme="snow"
+                                        modules={quillModules}
+                                        formats={quillFormats}
                                         value={lesson.content}
-                                        onChange={(e) =>
-                                          handleLessonChange(
-                                            cIdx,
-                                            lIdx,
-                                            "content",
-                                            e.target.value
-                                          )
-                                        }
-                                        rows={3}
+                                        onChange={(value) => handleLessonContentChange(cIdx, lIdx, value)}
+                                        placeholder="Nội dung chi tiết bài học..."
+                                        className="quill-editor"
                                       />
                                     </div>
 
