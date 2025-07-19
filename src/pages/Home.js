@@ -211,7 +211,7 @@ const Home = () => {
           </div>
 
           {filteredCourses.length > coursesPerPage && (
-            <div className="pagination">header-row
+            <div className="pagination">
               <button onClick={handlePrevPage} disabled={currentPage === 1}>
                 &laquo; Trang trước
               </button>

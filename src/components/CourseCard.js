@@ -65,11 +65,7 @@ const CourseCard = ({ course, refreshCourses, isInitiallyFavorite, onFavoriteTog
 
   const handleViewMore = (e) => {
     e.stopPropagation();
-    if (!isEnrolled) {
-      alert("Vui lòng mua khóa học để xem nội dung chi tiết!");
-    } else {
-      window.location.href = `/courses/${course._id}`;
-    }
+    window.location.href = `/courses/${course._id}?preview=true`;
   };
 
   const toggleFavorite = async (e) => {

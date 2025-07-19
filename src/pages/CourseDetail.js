@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import RatingForm from "../components/RatingForm";
 import QuizViewer from "../components/QuizViewer";
 import "./CourseDetail.css";
@@ -7,10 +7,12 @@ import "./CourseDetail.css";
 const CourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [course, setCourse] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -30,6 +32,14 @@ const CourseDetail = () => {
 
         const data = await res.json();
         setCourse(data);
+        
+        const previewParam = searchParams.get("preview");
+        const isEnrolled = data.enrolledUsers?.includes(user?.id);
+        setIsPreviewMode(previewParam === "true" && !isEnrolled);
+        
+        if (previewParam === "true" && !isEnrolled) {
+          setActiveTab("overview");
+        }
       } catch (err) {
         setError(err.message || "Lỗi kết nối tới server.");
       } finally {
@@ -38,11 +48,7 @@ const CourseDetail = () => {
     };
 
     fetchCourse();
-  }, [id]);
-
-  if (loading) return <div className="loading">Đang tải...</div>;
-  if (error) return <div className="error-message">{error}</div>;
-  if (!course) return <div>Không tìm thấy khóa học.</div>;
+  }, [id, searchParams]);
 
   const getYouTubeEmbedUrl = (url) => {
     const match = url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
@@ -103,6 +109,14 @@ const CourseDetail = () => {
     });
   };
 
+  const handleTabChange = (tab) => {
+    if (isPreviewMode && tab !== "overview") {
+      alert("Vui lòng mua khóa học để xem nội dung này!");
+      return;
+    }
+    setActiveTab(tab);
+  };
+
   const renderChapters = () => (
     <div className="section">
       {course.details?.chapters?.map((chapter, ci) => (
@@ -160,10 +174,7 @@ const CourseDetail = () => {
   const renderOverview = () => (
     <div className="section">
       <h2>Giới thiệu khóa học</h2>
-      <p style={{ whiteSpace: "pre-line" }}>
-      {course.description || course.details?.content}
-      </p>
-
+      <p>{course.description || course.details?.content}</p>
 
       {course.details?.syllabus && (
         <>
@@ -192,7 +203,6 @@ const CourseDetail = () => {
 
   const renderReviews = () => (
     <div className="section reviews-section">
-
       {course.reviews?.length > 0 ? (
         course.reviews.map((review, i) => (
           <div key={i} className="review-item">
@@ -208,7 +218,6 @@ const CourseDetail = () => {
       )}
 
       <div className="add-review-section">
-        
         <RatingForm
           courseId={id}
           onReviewSubmitted={() => window.location.reload()}
@@ -216,6 +225,10 @@ const CourseDetail = () => {
       </div>
     </div>
   );
+
+  if (loading) return <div className="loading">Đang tải...</div>;
+  if (error) return <div className="error-message">{error}</div>;
+  if (!course) return <div>Không tìm thấy khóa học.</div>;
 
   return (
     <div className="course-detail-container">
@@ -226,46 +239,53 @@ const CourseDetail = () => {
       <div className="course-header">
         <h1>{course.title}</h1>
         <div className="course-meta">
-          
           <div className="meta-item">
             <span className="meta-icon">👥</span> {course.students} Học Viên
           </div>
           <div className="meta-item">
             <span className="meta-icon">⏳</span>{" "}
-            {course.details?.duration || course.duration} giờ
+            {course.details?.duration || course.duration}
           </div>
+          {isPreviewMode && (
+            <div className="meta-item" style={{ color: "#e53935", fontWeight: "bold" }}>
+              <span className="meta-icon">🔒</span> Bạn cần mua khóa học để xem toàn bộ nội dung
+            </div>
+          )}
         </div>
       </div>
 
       <div className="tabs">
-        {["overview", "content", "quiz", "reviews"].map((tab) => (
+        {["content", "overview", "quiz", "reviews"].map((tab) => (
           <button
             key={tab}
-            className={`tab-button ${activeTab === tab ? "active" : ""}`}
-            onClick={() => setActiveTab(tab)}
+            className={`tab-button ${activeTab === tab ? "active" : ""} ${
+              isPreviewMode && tab !== "overview" ? "disabled-tab" : ""
+            }`}
+            onClick={() => handleTabChange(tab)}
+            disabled={isPreviewMode && tab !== "overview"}
           >
             {
               {
-                overview: "Tổng quan",
                 content: "Nội dung khóa học",
+                overview: "Tổng quan",
                 quiz: "Câu hỏi kiểm tra",
-                reviews: "Đánh giá ",
+                reviews: "Đánh giá",
               }[tab]
             }
+            {isPreviewMode && tab !== "overview" && " (🔒)"}
           </button>
         ))}
       </div>
 
       <div className="tab-content">
-        {activeTab === "overview" && renderOverview()}
         {activeTab === "content" && renderChapters()}
+        {activeTab === "overview" && renderOverview()}
         {activeTab === "quiz" && (
           <div className="quiz-section">
             <h2>Câu hỏi kiểm tra kiến thức</h2>
             <QuizViewer courseId={id} quizData={course.details?.quiz} />
           </div>
         )}
-
         {activeTab === "reviews" && renderReviews()}
       </div>
     </div>

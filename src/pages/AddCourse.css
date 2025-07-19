@@ -833,3 +833,45 @@
     padding: 0.75rem;
   }
 }
+/* Rich Text Editor Styles */
+.ql-container {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.ql-toolbar {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-color: #d1d5db !important;
+}
+
+.ql-container {
+  border-color: #d1d5db !important;
+  min-height: 150px;
+}
+
+.ql-editor {
+  min-height: 150px;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: #1f2937;
+}
+
+.ql-editor.ql-blank::before {
+  color: #9ca3af;
+  font-style: normal;
+  font-size: 0.9375rem;
+}
+
+/* Đảm bảo trình soạn thảo phù hợp với form */
+.form-group .ql-toolbar {
+  border-top: 1px solid #d1d5db;
+  border-left: 1px solid #d1d5db;
+  border-right: 1px solid #d1d5db;
+}
+
+.form-group .ql-container {
+  border: 1px solid #d1d5db;
+  border-top: none;
+}
